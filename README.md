@@ -1,17 +1,10 @@
-# MicAutoSet
-Automatically sets the volume of the default Microphone if it gets changed by an external programm.  
-![Control panel](https://raw.githubusercontent.com/THEN00P/MicAutoSet/master/assets/control%20panel.png)
+# Don't touch my mic!
+Don't touch my mic is a GUI to control your microphone settings from the taskbar. Just like you would with your speakers and headphones.  
 
-## Installation
-Download MicAutoSet.exe from here [MicAutoSet/releases](https://github.com/THEN00P/MicAutoSet/releases/latest)  
-Press `WIN` + `R` and enter `shell:startup`  
-Copy MicAutoSet.exe into the folder and start it
+Additionally it makes sure, that your microphone settings stay just the way you left them.
 
-## Usage
-MicAutoSet will use the current Microphone volume by default.  
-Once active the volume can only be changed by the MicFix control panel.  
-You can open it by double clicking the document icon in your system tray.  
-![system tray](https://raw.githubusercontent.com/THEN00P/MicAutoSet/master/assets/system%20tray.png)
+## Features
+- A popup in the taskbar just like for your sound output
+- Setting your default Microphone even if you unplug it and plug it back in
+- Keeping other applications from changing your microphone settings
 
-## Why
-Many games automatically set the microphone volume to 100% such as CS:GO or Black Ops 3. I originally made this for me and my friends but I thought it might be usefull for others too.

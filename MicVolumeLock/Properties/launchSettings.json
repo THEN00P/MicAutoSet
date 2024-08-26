@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "MicVolumeLock (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "MicVolumeLock (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

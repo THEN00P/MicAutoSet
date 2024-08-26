@@ -1,0 +1,3 @@
+[submodule "CoreAudio"]
+	path = CoreAudio
+	url = https://github.com/THEN00P/CoreAudio.git
