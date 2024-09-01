@@ -5,7 +5,9 @@ VisualStudioVersion = 17.8.34525.116
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MicVolumeLock", "MicVolumeLock\MicVolumeLock.csproj", "{DAB7BD92-39BC-443A-ABC4-73C78A248FD9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreAudio", "CoreAudio\CoreAudio\CoreAudio.csproj", "{392003CB-9ABD-4B49-ADA2-5A38D5747452}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AudioSwitcher.AudioApi", "AudioSwitcher\AudioSwitcher.AudioApi\AudioSwitcher.AudioApi.csproj", "{18492FA5-43B3-4E74-A860-2C15FAFFC654}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AudioSwitcher.AudioApi.CoreAudio", "AudioSwitcher\AudioSwitcher.AudioApi.CoreAudio\AudioSwitcher.AudioApi.CoreAudio.csproj", "{132502A7-6254-4B1A-872C-B55037180AC3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -75,6 +77,38 @@ Global
 		{392003CB-9ABD-4B49-ADA2-5A38D5747452}.Release|x64.Build.0 = Release|Any CPU
 		{392003CB-9ABD-4B49-ADA2-5A38D5747452}.Release|x86.ActiveCfg = Release|Any CPU
 		{392003CB-9ABD-4B49-ADA2-5A38D5747452}.Release|x86.Build.0 = Release|Any CPU
+		{18492FA5-43B3-4E74-A860-2C15FAFFC654}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{18492FA5-43B3-4E74-A860-2C15FAFFC654}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{18492FA5-43B3-4E74-A860-2C15FAFFC654}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{18492FA5-43B3-4E74-A860-2C15FAFFC654}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{18492FA5-43B3-4E74-A860-2C15FAFFC654}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{18492FA5-43B3-4E74-A860-2C15FAFFC654}.Debug|x64.Build.0 = Debug|Any CPU
+		{18492FA5-43B3-4E74-A860-2C15FAFFC654}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{18492FA5-43B3-4E74-A860-2C15FAFFC654}.Debug|x86.Build.0 = Debug|Any CPU
+		{18492FA5-43B3-4E74-A860-2C15FAFFC654}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{18492FA5-43B3-4E74-A860-2C15FAFFC654}.Release|Any CPU.Build.0 = Release|Any CPU
+		{18492FA5-43B3-4E74-A860-2C15FAFFC654}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{18492FA5-43B3-4E74-A860-2C15FAFFC654}.Release|ARM64.Build.0 = Release|Any CPU
+		{18492FA5-43B3-4E74-A860-2C15FAFFC654}.Release|x64.ActiveCfg = Release|Any CPU
+		{18492FA5-43B3-4E74-A860-2C15FAFFC654}.Release|x64.Build.0 = Release|Any CPU
+		{18492FA5-43B3-4E74-A860-2C15FAFFC654}.Release|x86.ActiveCfg = Release|Any CPU
+		{18492FA5-43B3-4E74-A860-2C15FAFFC654}.Release|x86.Build.0 = Release|Any CPU
+		{132502A7-6254-4B1A-872C-B55037180AC3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{132502A7-6254-4B1A-872C-B55037180AC3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{132502A7-6254-4B1A-872C-B55037180AC3}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{132502A7-6254-4B1A-872C-B55037180AC3}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{132502A7-6254-4B1A-872C-B55037180AC3}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{132502A7-6254-4B1A-872C-B55037180AC3}.Debug|x64.Build.0 = Debug|Any CPU
+		{132502A7-6254-4B1A-872C-B55037180AC3}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{132502A7-6254-4B1A-872C-B55037180AC3}.Debug|x86.Build.0 = Debug|Any CPU
+		{132502A7-6254-4B1A-872C-B55037180AC3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{132502A7-6254-4B1A-872C-B55037180AC3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{132502A7-6254-4B1A-872C-B55037180AC3}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{132502A7-6254-4B1A-872C-B55037180AC3}.Release|ARM64.Build.0 = Release|Any CPU
+		{132502A7-6254-4B1A-872C-B55037180AC3}.Release|x64.ActiveCfg = Release|Any CPU
+		{132502A7-6254-4B1A-872C-B55037180AC3}.Release|x64.Build.0 = Release|Any CPU
+		{132502A7-6254-4B1A-872C-B55037180AC3}.Release|x86.ActiveCfg = Release|Any CPU
+		{132502A7-6254-4B1A-872C-B55037180AC3}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

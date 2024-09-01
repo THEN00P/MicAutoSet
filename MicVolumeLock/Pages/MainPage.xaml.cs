@@ -47,8 +47,8 @@ namespace MicVolumeLock.Pages
     
         private void MuteButton_Click(object sender, RoutedEventArgs e)
         {
-            App.Mic.AudioEndpointVolume.Mute = !App.Mic.AudioEndpointVolume.Mute;
-            App.Muted = App.Mic.AudioEndpointVolume.Mute;
+            App.Muted = !App.Mic.IsMuted;
+            App.Mic.SetMuteAsync(App.Muted);
 
             UpdateMuteUi();
         }
@@ -58,8 +58,7 @@ namespace MicVolumeLock.Pages
         {
             App.Volume = e.NewValue;
             
-            // TODO: this started throwing a low level exception, after a windows sdk update i think
-            App.Mic.AudioEndpointVolume.MasterVolumeLevelScalar = (float)(App.Volume / 100);
+            App.Mic.SetVolumeAsync(App.Volume);
         }
 
         private void SettingsButton_Click(object sender, RoutedEventArgs e)

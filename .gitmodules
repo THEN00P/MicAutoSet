@@ -1,3 +1,4 @@
-[submodule "CoreAudio"]
-	path = CoreAudio
-	url = https://github.com/THEN00P/CoreAudio.git
+
+[submodule "AudioSwitcher"]
+	path = AudioSwitcher
+	url = https://github.com/THEN00P/AudioSwitcher.git

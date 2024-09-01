@@ -1,8 +1,8 @@
 using Windows.Graphics;
+using AudioSwitcher.AudioApi;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
-using CoreAudio;
 
 namespace MicVolumeLock.Pages
 {
@@ -15,9 +15,9 @@ namespace MicVolumeLock.Pages
             InitializeComponent();
 
             // App.Enumerator.RegisterEndpointNotificationCallback();
-            foreach (var device in App.Enumerator.EnumerateAudioEndPoints(DataFlow.Capture, DeviceState.Active))
+            foreach (var device in App.Enumerator.GetDevices(DeviceType.Capture, DeviceState.Active))
             {
-                DeviceList.Items.Add(device.FriendlyName);
+                DeviceList.Items.Add(device.Name);
             }
             
             DeviceList.SelectedIndex = 0;

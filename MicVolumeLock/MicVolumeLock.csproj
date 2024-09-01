@@ -2,7 +2,7 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
-    <TargetFramework>net9.0-windows10.0.22621.0</TargetFramework>
+    <TargetFramework>net8.0-windows10.0.22621.0</TargetFramework>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     <RootNamespace>MicVolumeLock</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
@@ -58,7 +58,8 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CoreAudio\CoreAudio\CoreAudio.csproj" />
+    <ProjectReference Include="..\AudioSwitcher\AudioSwitcher.AudioApi.CoreAudio\AudioSwitcher.AudioApi.CoreAudio.csproj" />
+    <ProjectReference Include="..\AudioSwitcher\AudioSwitcher.AudioApi\AudioSwitcher.AudioApi.csproj" />
   </ItemGroup>
 
   <!-- 

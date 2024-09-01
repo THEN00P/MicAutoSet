@@ -1,8 +1,8 @@
 ﻿using Microsoft.UI.Xaml;
-using CoreAudio;
+using AudioSwitcher.AudioApi;
+using AudioSwitcher.AudioApi.CoreAudio;
 using System;
-using System.Diagnostics;
-using H.NotifyIcon;
+using AudioSwitcher.AudioApi.Observables;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -11,12 +11,12 @@ namespace MicVolumeLock
 {
     public partial class App : Application
     {
+        internal static CoreAudioController Enumerator;
         internal static Guid EnumeratorCtx = Guid.NewGuid();
-        internal static MMDevice Mic;
-        internal static String MicId;
+        internal static CoreAudioDevice Mic;
+        internal static Guid MicId;
         internal static double Volume;
         internal static bool Muted;
-        internal static MMDeviceEnumerator Enumerator = new(EnumeratorCtx);
 
         internal static MainWindow MainWindow;
 
@@ -24,41 +24,22 @@ namespace MicVolumeLock
         {
             InitializeComponent();
 
-            Mic = Enumerator.GetDefaultAudioEndpoint(DataFlow.Capture, Role.Communications);
-            MicId = Mic.ID;
-            Volume = Mic.AudioEndpointVolume.MasterVolumeLevelScalar * 100;
-            Muted = Mic.AudioEndpointVolume.Mute;
+            Enumerator = new();
+            Mic = Enumerator.GetDefaultDevice(DeviceType.Capture, Role.Communications);
+            MicId = Mic.Id;
+            Volume = Mic.Volume;
+            Muted = Mic.IsMuted;
+            
+            Enumerator.AudioDeviceChanged.When(x => 
+                x.ChangedType == DeviceChangedType.DefaultChanged && 
+                x.Device.Id != MicId
+            ).Subscribe(x => Mic.SetAsDefault());
+            
+            Mic.VolumeChanged.When(x => 
+                Math.Abs(x.Volume - Volume) > 0.1
+            ).Subscribe(x => Mic.SetVolumeAsync(Volume));
 
-            MMNotificationClient notificationClient = new MMNotificationClient(Enumerator);
-            notificationClient.DefaultDeviceChanged += NotificationClientOnDefaultDeviceChanged;
-
-            Mic.AudioEndpointVolume.OnVolumeNotification += AudioEndpointVolume_OnVolumeNotification;
-        }
-
-        private void NotificationClientOnDefaultDeviceChanged(object sender, DefaultDeviceChangedEventArgs e)
-        {
-            if (e.DeviceId != MicId)
-            {
-                // We can't use the Global Microphone Objects, because we're running in a different thread
-                var localEnumerator = new MMDeviceEnumerator(EnumeratorCtx);
-                localEnumerator.GetDevice(MicId).Selected = true;
-            }
-        }
-
-        private void AudioEndpointVolume_OnVolumeNotification(AudioVolumeNotificationData data)
-        {
-            var uiValueRounded = Math.Round(Volume);
-            var micValueRounded = Math.Round(Mic.AudioEndpointVolume.MasterVolumeLevelScalar * 100);
-
-            if (Math.Abs(uiValueRounded - micValueRounded) > 0.1)
-            {
-                Mic.AudioEndpointVolume.MasterVolumeLevelScalar = (float)(uiValueRounded / 100);
-            }
-
-            if (Mic.AudioEndpointVolume.Mute != Muted)
-            {
-                Mic.AudioEndpointVolume.Mute = Muted;
-            }
+            Mic.MuteChanged.Subscribe(x => Mic.SetMuteAsync(Muted));
         }
 
         protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
