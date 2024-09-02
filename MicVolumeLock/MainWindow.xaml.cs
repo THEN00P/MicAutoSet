@@ -6,6 +6,7 @@ using Microsoft.UI.Windowing;
 using CommunityToolkit.Mvvm.Input;
 using H.NotifyIcon;
 using Microsoft.UI.Xaml.Media.Animation;
+using MicVolumeLock.Utils;
 using MicVolumeLock.Pages;
 
 
@@ -65,7 +66,7 @@ namespace MicVolumeLock
             SetWindowDimensions(MainPage.PageSize);
             NavigateTo(typeof(MainPage));
             WindowExtensions.Show(this, true);
-            Util.SetForegroundWindow(WinRT.Interop.WindowNative.GetWindowHandle(this));
+            PositionUtil.SetForegroundWindow(WinRT.Interop.WindowNative.GetWindowHandle(this));
         }
 
         [RelayCommand]
@@ -88,19 +89,17 @@ namespace MicVolumeLock
 
         private void SetWindowDimensions(Windows.Graphics.SizeInt32 windowSize)
         {
-            var curPos = Util.GetCursorPosition();
+            var curPos = PositionUtil.GetCursorPosition();
 
             var winX = curPos.X - (windowSize.Width / 2);
-            if (winX < 0)
-            {
-                winX = 0;
-            }
+            
+            var winY = PositionUtil.GetTaskbarRect().Top - windowSize.Height - 12;
 
-            var winY = curPos.Y - windowSize.Height;
-            if (winY < 0)
-            {
-                winY = 0;
-            }
+            // var winY = curPos.Y - windowSize.Height;
+            // if (winY < 0)
+            // {
+            //     winY = 0;
+            // }
             
             this.AppWindow.MoveAndResize(new RectInt32(winX, winY, windowSize.Width, windowSize.Height));
         }

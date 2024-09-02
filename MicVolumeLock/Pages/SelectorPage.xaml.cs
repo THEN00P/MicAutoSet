@@ -1,5 +1,9 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Windows.Graphics;
 using AudioSwitcher.AudioApi;
+using AudioSwitcher.AudioApi.CoreAudio;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
@@ -9,20 +13,35 @@ namespace MicVolumeLock.Pages
     public sealed partial class SelectorPage : Page
     {
         public static readonly SizeInt32 PageSize = new(375, 375);
+        private Dictionary<int, CoreAudioDevice> Devices = new();
         
         public SelectorPage()
         {
             InitializeComponent();
 
-            // App.Enumerator.RegisterEndpointNotificationCallback();
+            var i = 0;
             foreach (var device in App.Enumerator.GetDevices(DeviceType.Capture, DeviceState.Active))
             {
-                DeviceList.Items.Add(device.Name);
+                Devices.Add(i, device);
+                DeviceList.Items.Add(device.FullName);
+
+                if (device.IsDefaultDevice)
+                {
+                    DeviceList.SelectedIndex = i;
+                }
+                
+                i++;
             }
-            
-            DeviceList.SelectedIndex = 0;
+
+            DeviceList.SelectionChanged += (sender, args) =>
+            {
+                App.MicId = Devices[DeviceList.SelectedIndex].Id;
+                App.Mic = Devices[DeviceList.SelectedIndex];
+                Devices[DeviceList.SelectedIndex].SetAsDefaultAsync();
+                Devices[DeviceList.SelectedIndex].SetAsDefaultCommunicationsAsync();
+            };
         }
-        
+
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
