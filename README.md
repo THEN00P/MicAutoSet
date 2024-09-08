@@ -5,6 +5,6 @@ Additionally it makes sure, that your microphone settings stay just the way you 
 
 ## Features
 - A popup in the taskbar just like for your sound output
-- Setting your default Microphone even if you unplug it and plug it back in
 - Keeping other applications from changing your microphone settings
+- (TODO) Setting your default Microphone even if you unplug it and plug it back in
 
