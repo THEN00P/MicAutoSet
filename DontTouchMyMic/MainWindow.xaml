@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="DontTouchMyMic.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:DontTouchMyMic"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    xmlns:tb="using:H.NotifyIcon"
+    Activated="Window_Activated">
+    <Grid>
+        <tb:TaskbarIcon
+            LeftClickCommand="{x:Bind OpenWindowCommand}"
+            ContextMenuMode="SecondWindow"
+            NoLeftClickDelay="True"
+            IconSource="ms-appx:///Assets/TrayIcon.ico"
+            >
+            <tb:TaskbarIcon.ContextFlyout>
+                <MenuFlyout AreOpenCloseAnimationsEnabled="False">
+                    <MenuFlyoutItem
+                    Command="{x:Bind OpenWindowCommand}"
+                    Text="Show/Hide Window"
+                    />
+                    <MenuFlyoutSeparator />
+                    <MenuFlyoutItem
+                    Command="{x:Bind ExitApplicationCommand}"
+                    Text="Exit"
+                    />
+                </MenuFlyout>
+            </tb:TaskbarIcon.ContextFlyout>
+        </tb:TaskbarIcon>
+
+        <Frame x:Name="ContentFrame">
+            <Frame.ContentTransitions>
+                <TransitionCollection>
+                    <NavigationThemeTransition />
+                </TransitionCollection>
+            </Frame.ContentTransitions>
+        </Frame>
+    </Grid>
+</Window>

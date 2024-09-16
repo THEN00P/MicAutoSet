@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "DontTouchMyMic (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "DontTouchMyMic (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
