@@ -24,7 +24,7 @@ namespace DontTouchMyMic
         {
             InitializeComponent();
 
-            Enumerator = new();
+            Enumerator = new CoreAudioController();
             Mic = Enumerator.GetDefaultDevice(DeviceType.Capture, Role.Communications);
             MicId = Mic.Id;
             Volume = Mic.Volume;

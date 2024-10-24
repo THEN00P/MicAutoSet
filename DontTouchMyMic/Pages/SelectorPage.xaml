@@ -8,14 +8,22 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     >
-
-    <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch" Padding="2">
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch" VerticalAlignment="Center">
+    <Grid RowDefinitions="Auto, *, Auto" Padding="2" VerticalAlignment="Stretch">
+        <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Stretch" VerticalAlignment="Center">
             <Button Click="BackButton_Click" Margin="3 3" Padding="10" BorderThickness="0" Background="Transparent">
                 <SymbolIcon Symbol="Back"></SymbolIcon>
             </Button>
             <TextBlock Text="Set your default Microphone" FontSize="14" VerticalAlignment="Center"></TextBlock>
         </StackPanel>
-        <ListView Name="DeviceList"></ListView>
-    </StackPanel>
+        <StackPanel Grid.Row="1" Orientation="Vertical" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <ListView Name="DeviceList"></ListView>
+        </StackPanel>
+        <!-- TODO: Fix Background -->
+        <StackPanel Grid.Row="2"  Padding="8, 0" Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}" Orientation="Horizontal" HorizontalAlignment="Stretch">
+            <TextBlock Width="280" Text="Run on Startup" FontSize="14" HorizontalAlignment="Stretch"
+                           VerticalAlignment="Center">
+            </TextBlock>
+            <ToggleSwitch Name="AutoStartToggle" Toggled="ToggleSwitch_OnToggled"></ToggleSwitch>
+        </StackPanel>
+    </Grid>
 </Page>
