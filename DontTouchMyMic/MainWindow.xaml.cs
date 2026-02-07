@@ -15,7 +15,7 @@ namespace DontTouchMyMic
     public sealed partial class MainWindow : Window
     {
         OverlappedPresenter presenter;
-        WindowsSystemDispatcherQueueHelper m_wsdqHelper; // See separate sample below for implementation
+        WindowsSystemDispatcherQueueHelper m_wsdqHelper;
         Microsoft.UI.Composition.SystemBackdrops.DesktopAcrylicController m_acrylicController;
         Microsoft.UI.Composition.SystemBackdrops.SystemBackdropConfiguration m_configurationSource;
 
@@ -60,7 +60,7 @@ namespace DontTouchMyMic
 #endif
             }
         }
-
+        
         [RelayCommand]
         public void OpenWindow()
         {
@@ -87,19 +87,12 @@ namespace DontTouchMyMic
             m_configurationSource = null;
         }
 
-        private void SetWindowDimensions(Windows.Graphics.SizeInt32 windowSize)
+        private void SetWindowDimensions(SizeInt32 windowSize)
         {
             var curPos = PositionUtil.GetCursorPosition();
 
             var winX = curPos.X - (windowSize.Width / 2);
-            
             var winY = PositionUtil.GetTaskbarRect().Top - windowSize.Height - 12;
-
-            // var winY = curPos.Y - windowSize.Height;
-            // if (winY < 0)
-            // {
-            //     winY = 0;
-            // }
             
             this.AppWindow.MoveAndResize(new RectInt32(winX, winY, windowSize.Width, windowSize.Height));
         }

@@ -12,7 +12,7 @@
     <Grid>
         <tb:TaskbarIcon
             LeftClickCommand="{x:Bind OpenWindowCommand}"
-            ContextMenuMode="SecondWindow"
+            ContextMenuMode="PopupMenu"
             NoLeftClickDelay="True"
             IconSource="ms-appx:///Assets/TrayIcon.ico"
             >
