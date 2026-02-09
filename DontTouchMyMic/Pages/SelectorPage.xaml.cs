@@ -1,23 +1,22 @@
 using System;
-using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using Windows.ApplicationModel;
 using Windows.Graphics;
-using AudioSwitcher.AudioApi;
-using AudioSwitcher.AudioApi.CoreAudio;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
-using Microsoft.Win32;
 
 namespace DontTouchMyMic.Pages
 {
     public sealed partial class SelectorPage : Page
     {
         public static readonly SizeInt32 PageSize = new(375, 375);
-        private Dictionary<int, CoreAudioDevice> Devices = new();
+        public ObservableCollection<CachedMicrophoneListItem> DeviceItems { get; } = new();
+
         private StartupTask startupTask;
+
         private async void initStartupTask()
         {
             startupTask = await StartupTask.GetAsync("DontTouchMyMic");
@@ -33,28 +32,54 @@ namespace DontTouchMyMic.Pages
         {
             InitializeComponent();
             initStartupTask();
-            
-            var i = 0;
-            foreach (var device in App.Enumerator.GetDevices(DeviceType.Capture, DeviceState.Active))
-            {
-                Devices.Add(i, device);
-                DeviceList.Items.Add(device.FullName);
 
-                if (device.IsDefaultDevice)
-                {
-                    DeviceList.SelectedIndex = i;
-                }
-                
-                i++;
+            RefreshDeviceList();
+
+            App.CachedMicrophonesChanged += OnCachedMicrophonesChanged;
+            Unloaded += SelectorPage_Unloaded;
+        }
+
+        private void SelectorPage_Unloaded(object sender, RoutedEventArgs e)
+        {
+            App.CachedMicrophonesChanged -= OnCachedMicrophonesChanged;
+            Unloaded -= SelectorPage_Unloaded;
+        }
+
+        private void OnCachedMicrophonesChanged()
+        {
+            DispatcherQueue.TryEnqueue(RefreshDeviceList);
+        }
+
+        private void RefreshDeviceList()
+        {
+            var cachedMicrophones = App.GetCachedMicrophonesSnapshot();
+
+            DeviceItems.Clear();
+            foreach (var cachedMicrophone in cachedMicrophones)
+            {
+                DeviceItems.Add(new CachedMicrophoneListItem(
+                    cachedMicrophone.DeviceId,
+                    cachedMicrophone.Name,
+                    cachedMicrophone.IsConnected,
+                    cachedMicrophone.IsDefault
+                ));
             }
+        }
 
-            DeviceList.SelectionChanged += (sender, args) =>
+        private void DeviceList_DragItemsCompleted(ListViewBase sender, DragItemsCompletedEventArgs args)
+        {
+            if (DeviceItems.Count == 0)
+                return;
+
+            App.SetCachedMicrophoneOrder(DeviceItems.Select(item => item.DeviceId).ToList());
+        }
+
+        private void RemoveCachedDeviceButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.Tag is Guid deviceId)
             {
-                App.MicId = Devices[DeviceList.SelectedIndex].Id;
-                App.Mic = Devices[DeviceList.SelectedIndex];
-                Devices[DeviceList.SelectedIndex].SetAsDefaultAsync();
-                Devices[DeviceList.SelectedIndex].SetAsDefaultCommunicationsAsync();
-            };
+                App.RemoveCachedMicrophone(deviceId);
+            }
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -86,5 +111,37 @@ namespace DontTouchMyMic.Pages
             else
                 startupTask.Disable();
         }
+    }
+
+    public sealed class CachedMicrophoneListItem
+    {
+        public CachedMicrophoneListItem(Guid deviceId, string displayName, bool isConnected, bool isDefault)
+        {
+            DeviceId = deviceId;
+            DisplayName = displayName;
+            IsConnected = isConnected;
+            IsDefault = isDefault;
+        }
+
+        public Guid DeviceId { get; }
+        public string DisplayName { get; }
+        public bool IsConnected { get; }
+        public bool IsDefault { get; }
+        public bool IsRemoveEnabled => !IsConnected;
+
+        public string StatusText
+        {
+            get
+            {
+                if (IsConnected && IsDefault)
+                    return "Connected - default";
+                if (IsConnected)
+                    return "Connected";
+                return "Disconnected";
+            }
+        }
+
+        public double NameOpacity => IsConnected ? 1.0 : 0.55;
+        public double StatusOpacity => IsConnected ? 0.9 : 0.55;
     }
 }

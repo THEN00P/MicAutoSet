@@ -13,12 +13,48 @@
             <Button Click="BackButton_Click" Margin="3 3" Padding="10" BorderThickness="0" Background="Transparent">
                 <SymbolIcon Symbol="Back"></SymbolIcon>
             </Button>
-            <TextBlock Text="Set your default Microphone" FontSize="14" VerticalAlignment="Center"></TextBlock>
+            <TextBlock Text="Microphone priority" FontSize="14" VerticalAlignment="Center"></TextBlock>
         </StackPanel>
         <StackPanel Grid.Row="1" Orientation="Vertical" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-            <ListView Name="DeviceList"></ListView>
+            <ListView
+                Name="DeviceList"
+                ItemsSource="{x:Bind DeviceItems}"
+                SelectionMode="None"
+                CanDragItems="True"
+                CanReorderItems="True"
+                AllowDrop="True"
+                DragItemsCompleted="DeviceList_DragItemsCompleted">
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="local:CachedMicrophoneListItem">
+                        <Grid ColumnDefinitions="*,Auto" Padding="8,6">
+                            <StackPanel Spacing="2">
+                                <TextBlock
+                                    Text="{x:Bind DisplayName}"
+                                    Opacity="{x:Bind NameOpacity}"
+                                    TextTrimming="CharacterEllipsis" />
+                                <TextBlock
+                                    Text="{x:Bind StatusText}"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    Opacity="{x:Bind StatusOpacity}"
+                                    FontSize="12" />
+                            </StackPanel>
+                            <Button
+                                Grid.Column="1"
+                                Click="RemoveCachedDeviceButton_Click"
+                                Tag="{x:Bind DeviceId}"
+                                IsEnabled="{x:Bind IsRemoveEnabled}"
+                                Margin="8,0,0,0"
+                                Padding="8,4"
+                                BorderThickness="0"
+                                Background="Transparent"
+                                VerticalAlignment="Center">
+                                <SymbolIcon Symbol="Delete" />
+                            </Button>
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
         </StackPanel>
-        <!-- TODO: Fix Background -->
         <StackPanel Grid.Row="2"  Padding="8, 0" Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}" Orientation="Horizontal" HorizontalAlignment="Stretch">
             <TextBlock Width="280" Text="Run on Startup" FontSize="14" HorizontalAlignment="Stretch"
                            VerticalAlignment="Center">

@@ -1,6 +1,4 @@
 using System;
-using System.Diagnostics;
-using System.Threading;
 using Windows.Graphics;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -11,14 +9,27 @@ namespace DontTouchMyMic.Pages
     public sealed partial class MainPage : Page
     {
         public static readonly SizeInt32 PageSize = new(375, 100);
+        private bool isSyncingUi;
         
         public MainPage()
         {
             InitializeComponent();
 
-            VolSlider.Value = App.Volume;
+            SyncUiFromAppState();
 
-            UpdateMuteUi();
+            App.AudioStateChanged += OnAudioStateChanged;
+            Unloaded += MainPage_Unloaded;
+        }
+
+        private void MainPage_Unloaded(object sender, RoutedEventArgs e)
+        {
+            App.AudioStateChanged -= OnAudioStateChanged;
+            Unloaded -= MainPage_Unloaded;
+        }
+
+        private void OnAudioStateChanged()
+        {
+            DispatcherQueue.TryEnqueue(SyncUiFromAppState);
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -44,9 +55,24 @@ namespace DontTouchMyMic.Pages
                 MuteIcon.Symbol = Symbol.Microphone;
             }
         }
+
+        private void SyncUiFromAppState()
+        {
+            isSyncingUi = true;
+            if (Math.Abs(VolSlider.Value - App.Volume) > 0.1)
+            {
+                VolSlider.Value = App.Volume;
+            }
+            isSyncingUi = false;
+
+            UpdateMuteUi();
+        }
     
         private void MuteButton_Click(object sender, RoutedEventArgs e)
         {
+            if (App.Mic == null)
+                return;
+
             App.Muted = !App.Mic.IsMuted;
             App.Mic.SetMuteAsync(App.Muted);
 
@@ -56,9 +82,11 @@ namespace DontTouchMyMic.Pages
         public void VolSlider_ValueChanged(object sender,
             Microsoft.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
         {
-            App.Volume = e.NewValue;
-            
-            App.Mic.SetVolumeAsync(App.Volume);
+            if (isSyncingUi)
+                return;
+
+            App.SetCurrentMicVolume(e.NewValue);
+            App.ApplyCurrentMicVolume();
         }
 
         private void SettingsButton_Click(object sender, RoutedEventArgs e)
