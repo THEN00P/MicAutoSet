@@ -8,10 +8,14 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     >
-    <Grid RowDefinitions="Auto, *, Auto" Padding="2" VerticalAlignment="Stretch">
+    <Grid RowDefinitions="Auto, *, Auto" VerticalAlignment="Stretch">
         <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Stretch" VerticalAlignment="Center">
-            <Button Click="BackButton_Click" Margin="3 3" Padding="10" BorderThickness="0" Background="Transparent">
-                <SymbolIcon Symbol="Back"></SymbolIcon>
+            <Button Click="BackButton_Click" Margin="4 4" Padding="8" BorderThickness="0" Background="Transparent">
+                <SymbolIcon Symbol="Back" RenderTransformOrigin="0.5,0.5">
+                    <SymbolIcon.RenderTransform>
+                        <ScaleTransform ScaleX="0.6" ScaleY="0.6" />
+                    </SymbolIcon.RenderTransform>
+                </SymbolIcon>
             </Button>
             <TextBlock Text="Microphone priority" FontSize="14" VerticalAlignment="Center"></TextBlock>
         </StackPanel>
@@ -48,16 +52,30 @@
                                 BorderThickness="0"
                                 Background="Transparent"
                                 VerticalAlignment="Center">
-                                <SymbolIcon Symbol="Delete" />
+                                <SymbolIcon Symbol="Delete" RenderTransformOrigin="0.5,0.5">
+                                    <SymbolIcon.RenderTransform>
+                                        <ScaleTransform ScaleX="0.7" ScaleY="0.7" />
+                                    </SymbolIcon.RenderTransform>
+                                </SymbolIcon>
                             </Button>
                         </Grid>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
         </StackPanel>
-        <StackPanel Grid.Row="2"  Padding="8, 0" Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}" Orientation="Horizontal" HorizontalAlignment="Stretch">
-            <TextBlock Width="280" Text="Run on Startup" FontSize="14" HorizontalAlignment="Stretch"
-                           VerticalAlignment="Center">
+        <StackPanel 
+            Grid.Row="2" 
+            Padding="8, 3" 
+            Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}" 
+            Orientation="Horizontal" 
+            HorizontalAlignment="Stretch">
+            <TextBlock 
+                Padding="8, 0"
+                Width="260" 
+                Text="Run on Startup" 
+                FontSize="14" 
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Center">
             </TextBlock>
             <ToggleSwitch Name="AutoStartToggle" Toggled="ToggleSwitch_OnToggled"></ToggleSwitch>
         </StackPanel>
