@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.InteropServices;
 using Windows.Graphics;
 using Microsoft.UI.Xaml;
 using WinRT;
@@ -15,10 +14,6 @@ namespace DontTouchMyMic
 {
     public sealed partial class MainWindow : Window
     {
-        private const int GWL_EXSTYLE = -20;
-        private const long WS_EX_LAYERED = 0x00080000L;
-
-        OverlappedPresenter presenter;
         WindowsSystemDispatcherQueueHelper m_wsdqHelper;
         Microsoft.UI.Composition.SystemBackdrops.DesktopAcrylicController m_acrylicController;
         Microsoft.UI.Composition.SystemBackdrops.SystemBackdropConfiguration m_configurationSource;
@@ -27,14 +22,7 @@ namespace DontTouchMyMic
         {
             InitializeComponent();
 
-            var hWndMain = WinRT.Interop.WindowNative.GetWindowHandle(this);
-            long nExStyle = GetWindowLong(hWndMain, GWL_EXSTYLE);
-            if ((nExStyle & WS_EX_LAYERED) == 0)
-            {
-                SetWindowLong(hWndMain, GWL_EXSTYLE, (IntPtr)(nExStyle | WS_EX_LAYERED));
-            }
-
-            presenter = AppWindow.Presenter as OverlappedPresenter;
+            var presenter = AppWindow.Presenter as OverlappedPresenter;
 
             if (presenter != null)
             {
@@ -42,7 +30,7 @@ namespace DontTouchMyMic
                 presenter.IsMinimizable = false;
                 presenter.IsAlwaysOnTop = true;
                 presenter.IsResizable = false;
-                presenter.SetBorderAndTitleBar(false, false);
+                presenter.SetBorderAndTitleBar(true, false);
             }
 
             SetWindowDimensions(MainPage.PageSize);
@@ -155,32 +143,6 @@ namespace DontTouchMyMic
                 case ElementTheme.Light: m_configurationSource.Theme = Microsoft.UI.Composition.SystemBackdrops.SystemBackdropTheme.Light; break;
                 case ElementTheme.Default: m_configurationSource.Theme = Microsoft.UI.Composition.SystemBackdrops.SystemBackdropTheme.Default; break;
             }
-        }
-
-        [DllImport("user32.dll", EntryPoint = "GetWindowLongPtrW", SetLastError = true)]
-        private static extern IntPtr GetWindowLongPtr64(IntPtr hWnd, int nIndex);
-
-        [DllImport("user32.dll", EntryPoint = "GetWindowLongW", SetLastError = true)]
-        private static extern int GetWindowLong32(IntPtr hWnd, int nIndex);
-
-        [DllImport("user32.dll", EntryPoint = "SetWindowLongPtrW", SetLastError = true)]
-        private static extern IntPtr SetWindowLongPtr64(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
-
-        [DllImport("user32.dll", EntryPoint = "SetWindowLongW", SetLastError = true)]
-        private static extern int SetWindowLong32(IntPtr hWnd, int nIndex, int dwNewLong);
-
-        private static long GetWindowLong(IntPtr hWnd, int nIndex)
-        {
-            return IntPtr.Size == 8
-                ? GetWindowLongPtr64(hWnd, nIndex).ToInt64()
-                : GetWindowLong32(hWnd, nIndex);
-        }
-
-        private static IntPtr SetWindowLong(IntPtr hWnd, int nIndex, IntPtr dwNewLong)
-        {
-            return IntPtr.Size == 8
-                ? SetWindowLongPtr64(hWnd, nIndex, dwNewLong)
-                : new IntPtr(SetWindowLong32(hWnd, nIndex, unchecked((int)dwNewLong.ToInt64())));
         }
     }
 }
