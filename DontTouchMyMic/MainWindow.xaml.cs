@@ -1,6 +1,10 @@
 using System;
+using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
 using Windows.Graphics;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Media;
 using WinRT;
 using Microsoft.UI.Windowing;
 using CommunityToolkit.Mvvm.Input;
@@ -14,9 +18,13 @@ namespace DontTouchMyMic
 {
     public sealed partial class MainWindow : Window
     {
+        private const int WindowAnimationDurationMs = 120;
+        private const int WindowOffsetFromTaskbar = 5;
+
         WindowsSystemDispatcherQueueHelper m_wsdqHelper;
         Microsoft.UI.Composition.SystemBackdrops.DesktopAcrylicController m_acrylicController;
         Microsoft.UI.Composition.SystemBackdrops.SystemBackdropConfiguration m_configurationSource;
+        CancellationTokenSource m_windowAnimationCts;
 
         public MainWindow()
         {
@@ -28,7 +36,7 @@ namespace DontTouchMyMic
             {
                 presenter.IsMaximizable = false;
                 presenter.IsMinimizable = false;
-                presenter.IsAlwaysOnTop = true;
+                presenter.IsAlwaysOnTop = false;
                 presenter.IsResizable = false;
                 presenter.SetBorderAndTitleBar(true, false);
             }
@@ -49,23 +57,55 @@ namespace DontTouchMyMic
             ContentFrame.GoBack();
         }
 
-        private void Window_Activated(object sender, WindowActivatedEventArgs args)
+        private async void Window_Activated(object sender, WindowActivatedEventArgs args)
         {
             if (args.WindowActivationState == WindowActivationState.Deactivated)
             {
 #if !DEBUG
-                WindowExtensions.Hide(this, true);
-                ContentFrame.Navigate(typeof(MainPage));
+                await HideWindowAnimatedAsync(navigateToMainPageAfterHide: true);
 #endif
             }
         }
         
         [RelayCommand]
-        public void OpenWindow()
+        public Task OpenWindow()
         {
-            SetWindowDimensions(MainPage.PageSize);
-            WindowExtensions.Show(this, true);
-            PositionUtil.SetForegroundWindow(WinRT.Interop.WindowNative.GetWindowHandle(this));
+            return OpenWindowAnimatedAsync();
+        }
+
+        private async Task OpenWindowAnimatedAsync()
+        {
+            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
+            var targetRect = CalculateVisibleWindowRect(MainPage.PageSize);
+            var isWindowVisible = PositionUtil.IsWindowVisible(hwnd);
+
+            if (isWindowVisible)
+            {
+                CancelWindowAnimation();
+                AppWindow.MoveAndResize(targetRect);
+                WindowExtensions.Show(this, true);
+                PositionUtil.SetForegroundWindow(hwnd);
+                return;
+            }
+
+            var animationCts = ReplaceWindowAnimationToken();
+
+            try
+            {
+                var hiddenRect = CalculateHiddenWindowRect(targetRect);
+                AppWindow.MoveAndResize(hiddenRect);
+                WindowExtensions.Show(this, true);
+
+                await AnimateWindowRectAsync(hiddenRect, targetRect, WindowAnimationDurationMs, animationCts.Token);
+                PositionUtil.SetForegroundWindow(hwnd);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            finally
+            {
+                DisposeWindowAnimationToken(animationCts);
+            }
         }
 
         [RelayCommand]
@@ -88,12 +128,265 @@ namespace DontTouchMyMic
 
         private void SetWindowDimensions(SizeInt32 windowSize)
         {
-            var curPos = PositionUtil.GetCursorPosition();
+            this.AppWindow.MoveAndResize(CalculateVisibleWindowRect(windowSize));
+        }
 
-            var winX = curPos.X - (windowSize.Width / 2);
-            var winY = PositionUtil.GetTaskbarRect().Top - windowSize.Height - 12;
-            
-            this.AppWindow.MoveAndResize(new RectInt32(winX, winY, windowSize.Width, windowSize.Height));
+        private async Task HideWindowAnimatedAsync(bool navigateToMainPageAfterHide)
+        {
+            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
+            if (!PositionUtil.IsWindowVisible(hwnd))
+            {
+                if (navigateToMainPageAfterHide)
+                {
+                    ContentFrame.Navigate(typeof(MainPage));
+                }
+                return;
+            }
+
+            var animationCts = ReplaceWindowAnimationToken();
+
+            try
+            {
+                var currentRect = new RectInt32(
+                    AppWindow.Position.X,
+                    AppWindow.Position.Y,
+                    AppWindow.Size.Width,
+                    AppWindow.Size.Height
+                );
+
+                var hiddenRect = CalculateHiddenWindowRect(currentRect);
+                await AnimateWindowRectAsync(currentRect, hiddenRect, WindowAnimationDurationMs, animationCts.Token);
+                WindowExtensions.Hide(this, true);
+
+                if (navigateToMainPageAfterHide)
+                {
+                    ContentFrame.Navigate(typeof(MainPage));
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            finally
+            {
+                DisposeWindowAnimationToken(animationCts);
+            }
+        }
+
+        private RectInt32 CalculateVisibleWindowRect(SizeInt32 windowSize)
+        {
+            var cursorPosition = PositionUtil.GetCursorPosition();
+            var displayArea = DisplayArea.GetFromPoint(new PointInt32(cursorPosition.X, cursorPosition.Y), DisplayAreaFallback.Nearest);
+            var workArea = displayArea.WorkArea;
+            var taskbarEdge = PositionUtil.GetTaskbarEdge();
+
+            var centeredX = cursorPosition.X - (windowSize.Width / 2);
+            var centeredY = cursorPosition.Y - (windowSize.Height / 2);
+            var clampedX = Clamp(centeredX, workArea.X, workArea.X + workArea.Width - windowSize.Width);
+            var clampedY = Clamp(centeredY, workArea.Y, workArea.Y + workArea.Height - windowSize.Height);
+
+            return taskbarEdge switch
+            {
+                PositionUtil.TaskbarEdge.Top =>
+                    new RectInt32(
+                        clampedX,
+                        workArea.Y + WindowOffsetFromTaskbar,
+                        windowSize.Width,
+                        windowSize.Height
+                    ),
+                PositionUtil.TaskbarEdge.Left =>
+                    new RectInt32(
+                        workArea.X + WindowOffsetFromTaskbar,
+                        clampedY,
+                        windowSize.Width,
+                        windowSize.Height
+                    ),
+                PositionUtil.TaskbarEdge.Right =>
+                    new RectInt32(
+                        workArea.X + workArea.Width - windowSize.Width - WindowOffsetFromTaskbar,
+                        clampedY,
+                        windowSize.Width,
+                        windowSize.Height
+                    ),
+                _ =>
+                    new RectInt32(
+                        clampedX,
+                        workArea.Y + workArea.Height - windowSize.Height - WindowOffsetFromTaskbar,
+                        windowSize.Width,
+                        windowSize.Height
+                    )
+            };
+        }
+
+        private RectInt32 CalculateHiddenWindowRect(RectInt32 visibleRect)
+        {
+            var centerPoint = new PointInt32(
+                visibleRect.X + (visibleRect.Width / 2),
+                visibleRect.Y + (visibleRect.Height / 2)
+            );
+
+            var displayArea = DisplayArea.GetFromPoint(centerPoint, DisplayAreaFallback.Nearest);
+            var workArea = displayArea.WorkArea;
+            var taskbarEdge = PositionUtil.GetTaskbarEdge();
+
+            return taskbarEdge switch
+            {
+                PositionUtil.TaskbarEdge.Top =>
+                    new RectInt32(
+                        visibleRect.X,
+                        workArea.Y - visibleRect.Height - 1,
+                        visibleRect.Width,
+                        visibleRect.Height
+                    ),
+                PositionUtil.TaskbarEdge.Left =>
+                    new RectInt32(
+                        workArea.X - visibleRect.Width - 1,
+                        visibleRect.Y,
+                        visibleRect.Width,
+                        visibleRect.Height
+                    ),
+                PositionUtil.TaskbarEdge.Right =>
+                    new RectInt32(
+                        workArea.X + workArea.Width + 1,
+                        visibleRect.Y,
+                        visibleRect.Width,
+                        visibleRect.Height
+                    ),
+                _ =>
+                    new RectInt32(
+                        visibleRect.X,
+                        workArea.Y + workArea.Height + 1,
+                        visibleRect.Width,
+                        visibleRect.Height
+                    )
+            };
+        }
+
+        private static int Clamp(int value, int min, int max)
+        {
+            if (max < min)
+            {
+                return min;
+            }
+
+            if (value < min)
+            {
+                return min;
+            }
+
+            return value > max ? max : value;
+        }
+
+        private async Task AnimateWindowRectAsync(RectInt32 fromRect, RectInt32 toRect, int durationMs, CancellationToken cancellationToken)
+        {
+            if (durationMs <= 0 || RectEquals(fromRect, toRect))
+            {
+                ApplyWindowRect(toRect);
+                return;
+            }
+
+            var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var stopwatch = Stopwatch.StartNew();
+
+            EventHandler<object> renderingHandler = null;
+            CancellationTokenRegistration cancellationRegistration = default;
+
+            void CompleteAnimation()
+            {
+                CompositionTarget.Rendering -= renderingHandler;
+                cancellationRegistration.Dispose();
+            }
+
+            renderingHandler = (_, _) =>
+            {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    CompleteAnimation();
+                    tcs.TrySetCanceled(cancellationToken);
+                    return;
+                }
+
+                var rawProgress = stopwatch.Elapsed.TotalMilliseconds / durationMs;
+                if (rawProgress >= 1)
+                {
+                    ApplyWindowRect(toRect);
+                    CompleteAnimation();
+                    tcs.TrySetResult(null);
+                    return;
+                }
+
+                var easedProgress = 1 - Math.Pow(1 - rawProgress, 3);
+                ApplyWindowRect(LerpRect(fromRect, toRect, easedProgress));
+            };
+
+            cancellationRegistration = cancellationToken.Register(() =>
+            {
+                CompleteAnimation();
+                tcs.TrySetCanceled(cancellationToken);
+            });
+
+            CompositionTarget.Rendering += renderingHandler;
+
+            await tcs.Task;
+        }
+
+        private void ApplyWindowRect(RectInt32 rect)
+        {
+            if (AppWindow.Size.Width == rect.Width && AppWindow.Size.Height == rect.Height)
+            {
+                AppWindow.Move(new PointInt32(rect.X, rect.Y));
+                return;
+            }
+
+            AppWindow.MoveAndResize(rect);
+        }
+
+        private CancellationTokenSource ReplaceWindowAnimationToken()
+        {
+            CancelWindowAnimation();
+            m_windowAnimationCts = new CancellationTokenSource();
+            return m_windowAnimationCts;
+        }
+
+        private void DisposeWindowAnimationToken(CancellationTokenSource token)
+        {
+            if (ReferenceEquals(m_windowAnimationCts, token))
+            {
+                m_windowAnimationCts = null;
+            }
+
+            token.Dispose();
+        }
+
+        private void CancelWindowAnimation()
+        {
+            if (m_windowAnimationCts == null)
+            {
+                return;
+            }
+
+            m_windowAnimationCts.Cancel();
+            m_windowAnimationCts.Dispose();
+            m_windowAnimationCts = null;
+        }
+
+        private static RectInt32 LerpRect(RectInt32 fromRect, RectInt32 toRect, double progress)
+        {
+            return new RectInt32(
+                LerpInt(fromRect.X, toRect.X, progress),
+                LerpInt(fromRect.Y, toRect.Y, progress),
+                LerpInt(fromRect.Width, toRect.Width, progress),
+                LerpInt(fromRect.Height, toRect.Height, progress)
+            );
+        }
+
+        private static int LerpInt(int from, int to, double progress)
+        {
+            return from + (int)Math.Round((to - from) * progress);
+        }
+
+        private static bool RectEquals(RectInt32 first, RectInt32 second)
+        {
+            return first.X == second.X && first.Y == second.Y && first.Width == second.Width && first.Height == second.Height;
         }
 
         bool TrySetAcrylicBackdrop(bool useAcrylicThin)
