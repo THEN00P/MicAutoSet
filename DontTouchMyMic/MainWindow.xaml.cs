@@ -95,9 +95,9 @@ namespace DontTouchMyMic
                 var hiddenRect = CalculateHiddenWindowRect(targetRect);
                 AppWindow.MoveAndResize(hiddenRect);
                 WindowExtensions.Show(this, true);
+                PositionUtil.SetForegroundWindow(hwnd);
 
                 await AnimateWindowRectAsync(hiddenRect, targetRect, WindowAnimationDurationMs, animationCts.Token);
-                PositionUtil.SetForegroundWindow(hwnd);
             }
             catch (OperationCanceledException)
             {
@@ -143,6 +143,8 @@ namespace DontTouchMyMic
                 return;
             }
 
+            var previousForegroundWindow = PositionUtil.GetForegroundWindow();
+
             var animationCts = ReplaceWindowAnimationToken();
 
             try
@@ -155,8 +157,14 @@ namespace DontTouchMyMic
                 );
 
                 var hiddenRect = CalculateHiddenWindowRect(currentRect);
+                PositionUtil.SetForegroundWindow(hwnd);
                 await AnimateWindowRectAsync(currentRect, hiddenRect, WindowAnimationDurationMs, animationCts.Token);
                 WindowExtensions.Hide(this, true);
+
+                if (previousForegroundWindow != IntPtr.Zero && previousForegroundWindow != hwnd)
+                {
+                    PositionUtil.SetForegroundWindow(previousForegroundWindow);
+                }
 
                 if (navigateToMainPageAfterHide)
                 {
