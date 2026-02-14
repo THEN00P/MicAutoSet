@@ -1,0 +1,17 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="ARM64" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="DontTouchMyMic/DontTouchMyMic.csproj">
+    <Platform Solution="*|Any CPU" Project="x64" />
+    <Platform Solution="*|ARM64" Project="ARM64" />
+    <Platform Solution="*|x64" Project="x64" />
+    <Platform Solution="*|x86" Project="x86" />
+    <Deploy />
+  </Project>
+  <Project Path="AudioSwitcher/AudioSwitcher.AudioApi/AudioSwitcher.AudioApi.csproj" />
+  <Project Path="AudioSwitcher/AudioSwitcher.AudioApi.CoreAudio/AudioSwitcher.AudioApi.CoreAudio.csproj" />
+</Solution>
