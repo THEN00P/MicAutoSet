@@ -143,8 +143,6 @@ namespace DontTouchMyMic
                 return;
             }
 
-            var previousForegroundWindow = PositionUtil.GetForegroundWindow();
-
             var animationCts = ReplaceWindowAnimationToken();
 
             try
@@ -157,14 +155,14 @@ namespace DontTouchMyMic
                 );
 
                 var hiddenRect = CalculateHiddenWindowRect(currentRect);
-                PositionUtil.SetForegroundWindow(hwnd);
+                var pinnedBelowTaskbar = PositionUtil.PlaceWindowBelowTaskbarAboveApps(hwnd);
+                if (!pinnedBelowTaskbar)
+                {
+                    PositionUtil.SetForegroundWindow(hwnd);
+                }
+
                 await AnimateWindowRectAsync(currentRect, hiddenRect, WindowAnimationDurationMs, animationCts.Token);
                 WindowExtensions.Hide(this, true);
-
-                if (previousForegroundWindow != IntPtr.Zero && previousForegroundWindow != hwnd)
-                {
-                    PositionUtil.SetForegroundWindow(previousForegroundWindow);
-                }
 
                 if (navigateToMainPageAfterHide)
                 {
@@ -176,6 +174,7 @@ namespace DontTouchMyMic
             }
             finally
             {
+                PositionUtil.EnsureWindowNotTopMost(hwnd);
                 DisposeWindowAnimationToken(animationCts);
             }
         }

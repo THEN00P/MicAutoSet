@@ -7,6 +7,11 @@ namespace DontTouchMyMic.Utils
     internal class PositionUtil
     {
         private const int AbmGetTaskbarPos = 0x00000005;
+        private const uint SwpNoSize = 0x0001;
+        private const uint SwpNoMove = 0x0002;
+        private const uint SwpNoActivate = 0x0010;
+        private const uint SwpNoOwnerZOrder = 0x0200;
+        private static readonly IntPtr HwndNoTopMost = new IntPtr(-2);
 
         public enum TaskbarEdge : uint
         {
@@ -25,8 +30,16 @@ namespace DontTouchMyMic.Utils
         [DllImport("user32.dll")]
         public static extern bool SetForegroundWindow(IntPtr hWnd);
 
-        [DllImport("user32.dll")]
-        public static extern IntPtr GetForegroundWindow();
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern bool SetWindowPos(
+            IntPtr hWnd,
+            IntPtr hWndInsertAfter,
+            int X,
+            int Y,
+            int cx,
+            int cy,
+            uint uFlags
+        );
 
         [DllImport("user32.dll")]
         public static extern bool GetCursorPos(out POINT lpPoint);
@@ -73,7 +86,7 @@ namespace DontTouchMyMic.Utils
         public static RECT GetTaskbarRect()
         {
             RECT rect;
-            GetWindowRect(FindWindow("Shell_traywnd", ""), out rect);
+            GetWindowRect(FindWindow("Shell_TrayWnd", ""), out rect);
             return rect;
         }
 
@@ -83,6 +96,38 @@ namespace DontTouchMyMic.Utils
             GetCursorPos(out lpPoint);
 
             return lpPoint;
+        }
+
+        public static bool PlaceWindowBelowTaskbarAboveApps(IntPtr hWnd)
+        {
+            var taskbarHwnd = FindWindow("Shell_TrayWnd", "");
+            if (taskbarHwnd == IntPtr.Zero)
+            {
+                return false;
+            }
+
+            return SetWindowPos(
+                hWnd,
+                taskbarHwnd,
+                0,
+                0,
+                0,
+                0,
+                SwpNoMove | SwpNoSize | SwpNoActivate | SwpNoOwnerZOrder
+            );
+        }
+
+        public static bool EnsureWindowNotTopMost(IntPtr hWnd)
+        {
+            return SetWindowPos(
+                hWnd,
+                HwndNoTopMost,
+                0,
+                0,
+                0,
+                0,
+                SwpNoMove | SwpNoSize | SwpNoActivate | SwpNoOwnerZOrder
+            );
         }
 
         public static TaskbarEdge GetTaskbarEdge()
