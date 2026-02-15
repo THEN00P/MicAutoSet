@@ -350,6 +350,7 @@ namespace DontTouchMyMic
             var captureDevices = Enumerator
                 .GetDevices(DeviceType.Capture, DeviceState.All)
                 .ToList();
+            var windowsDefaultCaptureId = GetWindowsDefaultCaptureDeviceId();
 
             bool cacheChanged = false;
 
@@ -357,13 +358,37 @@ namespace DontTouchMyMic
             {
                 ConnectedCaptureDevices.Clear();
 
+                bool isInitialCacheSeed = includeNewDevices && CachedMicrophones.Count == 0;
+
                 foreach (var captureDevice in captureDevices)
                 {
                     if (captureDevice.State == DeviceState.Active)
                     {
                         ConnectedCaptureDevices[captureDevice.Id] = captureDevice;
+                    }
+                }
 
-                        if (includeNewDevices && CachedMicrophones.All(entry => entry.DeviceId != captureDevice.Id))
+                if (isInitialCacheSeed && windowsDefaultCaptureId.HasValue &&
+                    ConnectedCaptureDevices.TryGetValue(windowsDefaultCaptureId.Value, out var windowsDefaultCaptureDevice) &&
+                    CachedMicrophones.All(entry => entry.DeviceId != windowsDefaultCaptureDevice.Id))
+                {
+                    CachedMicrophones.Add(new CachedMicrophoneEntry
+                    {
+                        DeviceId = windowsDefaultCaptureDevice.Id,
+                        Name = windowsDefaultCaptureDevice.FullName,
+                        Volume = NormalizeVolume(windowsDefaultCaptureDevice.Volume)
+                    });
+                    cacheChanged = true;
+                }
+
+                if (includeNewDevices)
+                {
+                    foreach (var captureDevice in captureDevices)
+                    {
+                        if (captureDevice.State != DeviceState.Active)
+                            continue;
+
+                        if (CachedMicrophones.All(entry => entry.DeviceId != captureDevice.Id))
                         {
                             CachedMicrophones.Add(new CachedMicrophoneEntry
                             {
@@ -401,6 +426,22 @@ namespace DontTouchMyMic
                 }
 
                 return ConnectedCaptureDevices.Values.FirstOrDefault();
+            }
+        }
+
+        private static Guid? GetWindowsDefaultCaptureDeviceId()
+        {
+            try
+            {
+                var defaultCaptureDevice = Enumerator.GetDefaultDevice(DeviceType.Capture, Role.Communications)
+                    ?? Enumerator.GetDefaultDevice(DeviceType.Capture, Role.Console)
+                    ?? Enumerator.GetDefaultDevice(DeviceType.Capture, Role.Multimedia);
+
+                return defaultCaptureDevice?.Id;
+            }
+            catch
+            {
+                return null;
             }
         }
 

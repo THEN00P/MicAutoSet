@@ -14,4 +14,10 @@
   </Project>
   <Project Path="AudioSwitcher/AudioSwitcher.AudioApi/AudioSwitcher.AudioApi.csproj" />
   <Project Path="AudioSwitcher/AudioSwitcher.AudioApi.CoreAudio/AudioSwitcher.AudioApi.CoreAudio.csproj" />
+  <Project Path="Installer/DontTouchMyMic.Installer.wixproj">
+    <Platform Solution="*|Any CPU" Project="x64" />
+    <Platform Solution="*|ARM64" Project="ARM64" />
+    <Platform Solution="*|x64" Project="x64" />
+    <Platform Solution="*|x86" Project="x64" />
+  </Project>
 </Solution>

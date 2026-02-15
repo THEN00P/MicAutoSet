@@ -25,6 +25,7 @@ namespace DontTouchMyMic
         Microsoft.UI.Composition.SystemBackdrops.DesktopAcrylicController m_acrylicController;
         Microsoft.UI.Composition.SystemBackdrops.SystemBackdropConfiguration m_configurationSource;
         CancellationTokenSource m_windowAnimationCts;
+        AboutWindow m_aboutWindow;
 
         public MainWindow()
         {
@@ -73,6 +74,19 @@ namespace DontTouchMyMic
             return OpenWindowAnimatedAsync();
         }
 
+        [RelayCommand]
+        public void OpenAboutWindow()
+        {
+            if (m_aboutWindow == null)
+            {
+                m_aboutWindow = new AboutWindow();
+                m_aboutWindow.Closed += AboutWindow_Closed;
+            }
+
+            m_aboutWindow.CenterOnScreen();
+            m_aboutWindow.Activate();
+        }
+
         private async Task OpenWindowAnimatedAsync()
         {
             var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
@@ -116,6 +130,13 @@ namespace DontTouchMyMic
 
         private void Window_Closed(object sender, WindowEventArgs args)
         {
+            if (m_aboutWindow != null)
+            {
+                m_aboutWindow.Closed -= AboutWindow_Closed;
+                m_aboutWindow.Close();
+                m_aboutWindow = null;
+            }
+
             // Make sure any Mica/Acrylic controller is disposed so it doesn't try to
             // use this closed window.
             if (m_acrylicController != null)
@@ -124,6 +145,16 @@ namespace DontTouchMyMic
                 m_acrylicController = null;
             }
             m_configurationSource = null;
+        }
+
+        private void AboutWindow_Closed(object sender, WindowEventArgs args)
+        {
+            if (sender is AboutWindow aboutWindow)
+            {
+                aboutWindow.Closed -= AboutWindow_Closed;
+            }
+
+            m_aboutWindow = null;
         }
 
         private void SetWindowDimensions(SizeInt32 windowSize)

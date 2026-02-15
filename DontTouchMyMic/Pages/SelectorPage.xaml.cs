@@ -1,12 +1,11 @@
 using System;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Linq;
-using Windows.ApplicationModel;
 using Windows.Graphics;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
+using DontTouchMyMic.Utils;
 
 namespace DontTouchMyMic.Pages
 {
@@ -15,23 +14,25 @@ namespace DontTouchMyMic.Pages
         public static readonly SizeInt32 PageSize = new(375, 375);
         public ObservableCollection<CachedMicrophoneListItem> DeviceItems { get; } = new();
 
-        private StartupTask startupTask;
+        private bool isUpdatingAutoStartToggle;
 
-        private async void initStartupTask()
+        private async void InitAutoStartToggle()
         {
-            startupTask = await StartupTask.GetAsync("DontTouchMyMic");
-
-            if(startupTask.State == StartupTaskState.Enabled)
-                AutoStartToggle.IsOn = true;
-            else
-                AutoStartToggle.IsOn = false;
-
+            isUpdatingAutoStartToggle = true;
+            try
+            {
+                AutoStartToggle.IsOn = await AutoStartManager.IsEnabledAsync();
+            }
+            finally
+            {
+                isUpdatingAutoStartToggle = false;
+            }
         }
 
         public SelectorPage()
         {
             InitializeComponent();
-            initStartupTask();
+            InitAutoStartToggle();
 
             RefreshDeviceList();
 
@@ -102,14 +103,18 @@ namespace DontTouchMyMic.Pages
 
         private async void ToggleSwitch_OnToggled(object sender, RoutedEventArgs e)
         {
-            Debug.WriteLine("Toggled");
-            
-            var toggleSwitch = sender as ToggleSwitch;
+            if (isUpdatingAutoStartToggle || sender is not ToggleSwitch toggleSwitch)
+                return;
 
-            if(toggleSwitch.IsOn)
-                toggleSwitch.IsOn = (await startupTask.RequestEnableAsync() == StartupTaskState.Enabled);
-            else
-                startupTask.Disable();
+            isUpdatingAutoStartToggle = true;
+            try
+            {
+                toggleSwitch.IsOn = await AutoStartManager.SetEnabledAsync(toggleSwitch.IsOn);
+            }
+            finally
+            {
+                isUpdatingAutoStartToggle = false;
+            }
         }
     }
 

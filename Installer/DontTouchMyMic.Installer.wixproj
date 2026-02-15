@@ -1,0 +1,20 @@
+<Project Sdk="WixToolset.Sdk/5.0.2" ToolsVersion="4.0">
+  <PropertyGroup>
+    <InstallerPlatform Condition="'$(InstallerPlatform)' == ''">x64</InstallerPlatform>
+    <AppRuntimeIdentifier Condition="'$(AppRuntimeIdentifier)' == '' and '$(InstallerPlatform)' == 'arm64'">win-arm64</AppRuntimeIdentifier>
+    <AppRuntimeIdentifier Condition="'$(AppRuntimeIdentifier)' == '' and '$(InstallerPlatform)' != 'arm64'">win-x64</AppRuntimeIdentifier>
+    <AppPublishPlatform Condition="'$(AppPublishPlatform)' == '' and '$(InstallerPlatform)' == 'arm64'">ARM64</AppPublishPlatform>
+    <AppPublishPlatform Condition="'$(AppPublishPlatform)' == '' and '$(InstallerPlatform)' != 'arm64'">x64</AppPublishPlatform>
+    <OutputType>Package</OutputType>
+    <OutputName>DontTouchMyMicInstaller-$(InstallerPlatform)</OutputName>
+    <Platform>$(InstallerPlatform)</Platform>
+    <SuppressIces>ICE03</SuppressIces>
+    <AppProjectPath>..\DontTouchMyMic\DontTouchMyMic.csproj</AppProjectPath>
+    <AppTargetFramework>net10.0-windows10.0.26100.0</AppTargetFramework>
+    <AppPublishDir>$(MSBuildProjectDirectory)\..\artifacts\publish\$(AppRuntimeIdentifier)</AppPublishDir>
+    <DefineConstants>PublishDir=$(AppPublishDir);AppIcon=$(MSBuildProjectDirectory)\..\DontTouchMyMic\Assets\TrayIcon.ico;AppVersion=$(AppVersion)</DefineConstants>
+  </PropertyGroup>
+  <Target Name="PublishAppForInstaller" BeforeTargets="BeforeBuild">
+    <MSBuild Projects="$(AppProjectPath)" Targets="Publish" Properties="Configuration=$(Configuration);Platform=$(AppPublishPlatform);PublishProfile=;TargetFramework=$(AppTargetFramework);RuntimeIdentifier=$(AppRuntimeIdentifier);WindowsPackageType=None;PublishDir=$(AppPublishDir)\;AppVersion=$(AppVersion);AppVersionPackage=$(AppVersionPackage);AppVersionAssembly=$(AppVersionAssembly);BuildMachineTime=$(BuildMachineTime);BuildBranch=$(BuildBranch);BuildCommit=$(BuildCommit)" />
+  </Target>
+</Project>

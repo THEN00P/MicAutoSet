@@ -14,13 +14,17 @@
             LeftClickCommand="{x:Bind OpenWindowCommand}"
             ContextMenuMode="PopupMenu"
             NoLeftClickDelay="True"
-            IconSource="ms-appx:///Assets/TrayIcon.ico"
+            IconSource="/Assets/TrayIcon.ico"
             >
             <tb:TaskbarIcon.ContextFlyout>
                 <MenuFlyout AreOpenCloseAnimationsEnabled="False">
                     <MenuFlyoutItem
                     Command="{x:Bind OpenWindowCommand}"
                     Text="Show/Hide Window"
+                    />
+                    <MenuFlyoutItem
+                    Command="{x:Bind OpenAboutWindowCommand}"
+                    Text="About"
                     />
                     <MenuFlyoutSeparator />
                     <MenuFlyoutItem

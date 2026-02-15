@@ -23,6 +23,21 @@
     <AppxBundle>Never</AppxBundle>
     <AppInstallerUri>C:\Program Files\Dont Touch My Mic\</AppInstallerUri>
     <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
+    <Version>$(AppVersion)</Version>
+    <AssemblyVersion>$(AppVersionAssembly)</AssemblyVersion>
+    <FileVersion>$(AppVersionAssembly)</FileVersion>
+    <InformationalVersion>$(AppVersion)</InformationalVersion>
+    <AppxPackageVersion>$(AppVersionPackage)</AppxPackageVersion>
+    <BuildMachineTime Condition="'$(BuildMachineTime)' == ''">$([System.DateTimeOffset]::Now.ToString(&quot;yyyy-MM-dd HH:mm:ss zzz&quot;))</BuildMachineTime>
+    <BuildBranch Condition="'$(BuildBranch)' == '' and '$(GITHUB_REF_NAME)' != ''">$(GITHUB_REF_NAME)</BuildBranch>
+    <BuildBranch Condition="'$(BuildBranch)' == '' and '$(BUILD_SOURCEBRANCHNAME)' != ''">$(BUILD_SOURCEBRANCHNAME)</BuildBranch>
+    <BuildBranch Condition="'$(BuildBranch)' == '' and '$(RepositoryBranch)' != ''">$(RepositoryBranch)</BuildBranch>
+    <BuildBranch Condition="'$(BuildBranch)' == '' and '$(GIT_BRANCH)' != ''">$(GIT_BRANCH)</BuildBranch>
+    <BuildBranch Condition="'$(BuildBranch)' == ''">unknown</BuildBranch>
+    <BuildCommit Condition="'$(BuildCommit)' == '' and '$(GITHUB_SHA)' != ''">$(GITHUB_SHA)</BuildCommit>
+    <BuildCommit Condition="'$(BuildCommit)' == '' and '$(BUILD_SOURCEVERSION)' != ''">$(BUILD_SOURCEVERSION)</BuildCommit>
+    <BuildCommit Condition="'$(BuildCommit)' == '' and '$(SourceRevisionId)' != ''">$(SourceRevisionId)</BuildCommit>
+    <BuildCommit Condition="'$(BuildCommit)' == ''">unknown</BuildCommit>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Pages\MainPage.xaml" />
@@ -47,7 +62,39 @@
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260101001" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.7463" />
     <Manifest Include="$(ApplicationManifest)" />
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>BuildMachineTime</_Parameter1>
+      <_Parameter2>$(BuildMachineTime)</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>BuildBranch</_Parameter1>
+      <_Parameter2>$(BuildBranch)</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>BuildCommit</_Parameter1>
+      <_Parameter2>$(BuildCommit)</_Parameter2>
+    </AssemblyAttribute>
   </ItemGroup>
+
+  <Target
+    Name="SyncPackageManifestVersion"
+    BeforeTargets="PrepareForBuild"
+    Condition="'$(DesignTimeBuild)' != 'true' and Exists('$(MSBuildProjectDirectory)\Package.appxmanifest')">
+    <XmlPeek
+      XmlInputPath="$(MSBuildProjectDirectory)\Package.appxmanifest"
+      Query="/ns:Package/ns:Identity/@Version"
+      Namespaces="&lt;Namespace Prefix='ns' Uri='http://schemas.microsoft.com/appx/manifest/foundation/windows10'/&gt;">
+      <Output TaskParameter="Result" PropertyName="_ManifestIdentityVersion" />
+    </XmlPeek>
+
+    <XmlPoke
+      Condition="'$(_ManifestIdentityVersion)' != '$(AppVersionPackage)'"
+      XmlInputPath="$(MSBuildProjectDirectory)\Package.appxmanifest"
+      Query="/ns:Package/ns:Identity/@Version"
+      Namespaces="&lt;Namespace Prefix='ns' Uri='http://schemas.microsoft.com/appx/manifest/foundation/windows10'/&gt;"
+      Value="$(AppVersionPackage)" />
+  </Target>
+
 
   <!-- 
     Defining the "Msix" ProjectCapability here allows the Single-project MSIX Packaging
@@ -73,8 +120,13 @@
   </ItemGroup>
   <ItemGroup>
     <Content Update="Assets\TrayIcon.ico">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
+    <None Update="Assets\TrayIcon.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <WebView2EnableCsWinRTProjection>False</WebView2EnableCsWinRTProjection>

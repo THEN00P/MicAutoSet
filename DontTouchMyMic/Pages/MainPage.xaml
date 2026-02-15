@@ -13,11 +13,11 @@
         HorizontalAlignment="Center"
         VerticalAlignment="Center">
         <Button Click="MuteButton_Click" Margin="5 0" Padding="7" BorderThickness="0" Background="Transparent">
-            <SymbolIcon Name="MuteIcon" Symbol="Microphone" RenderTransformOrigin="0.5,0.5">
-                <SymbolIcon.RenderTransform>
+            <FontIcon Name="MuteIcon" FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE720;" RenderTransformOrigin="0.5,0.5">
+                <FontIcon.RenderTransform>
                     <ScaleTransform ScaleX="0.85" ScaleY="0.85" />
-                </SymbolIcon.RenderTransform>
-            </SymbolIcon>
+                </FontIcon.RenderTransform>
+            </FontIcon>
         </Button>
         <Slider Name="VolSlider" ValueChanged="VolSlider_ValueChanged" Width="250"></Slider>
         <Button Click="SettingsButton_Click" Margin="5 0" Padding="7" BorderThickness="0" Background="Transparent">

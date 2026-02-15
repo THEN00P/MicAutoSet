@@ -8,6 +8,9 @@ namespace DontTouchMyMic.Pages
 {
     public sealed partial class MainPage : Page
     {
+        private const string MicOnGlyph = "\uE720";
+        private const string MicOffGlyph = "\uEC54";
+
         public static readonly SizeInt32 PageSize = new(375, 100);
         private bool isSyncingUi;
         
@@ -46,14 +49,7 @@ namespace DontTouchMyMic.Pages
 
         private void UpdateMuteUi()
         {
-            if (App.Muted)
-            {
-                MuteIcon.Symbol = Symbol.Mute;
-            }
-            else
-            {
-                MuteIcon.Symbol = Symbol.Microphone;
-            }
+            MuteIcon.Glyph = App.Muted ? MicOffGlyph : MicOnGlyph;
         }
 
         private void SyncUiFromAppState()

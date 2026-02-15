@@ -1,0 +1,7 @@
+<Project>
+  <PropertyGroup>
+    <AppVersion>2.0.0</AppVersion>
+    <AppVersionPackage Condition="'$(AppVersionPackage)' == ''">$(AppVersion).0</AppVersionPackage>
+    <AppVersionAssembly Condition="'$(AppVersionAssembly)' == ''">$(AppVersionPackage)</AppVersionAssembly>
+  </PropertyGroup>
+</Project>
