@@ -2,7 +2,6 @@ using System;
 using Windows.Graphics;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using NavigationEventArgs = Microsoft.UI.Xaml.Navigation.NavigationEventArgs;
 
 namespace DontTouchMyMic.Pages
 {
@@ -33,18 +32,6 @@ namespace DontTouchMyMic.Pages
         private void OnAudioStateChanged()
         {
             DispatcherQueue.TryEnqueue(SyncUiFromAppState);
-        }
-
-        protected override void OnNavigatedTo(NavigationEventArgs e)
-        {
-            base.OnNavigatedTo(e);
-
-            if (App.MainWindow != null)
-            {
-                int windowY = App.MainWindow.AppWindow.Position.Y + App.MainWindow.AppWindow.Size.Height -
-                              PageSize.Height;
-                App.MainWindow.AppWindow.MoveAndResize(new RectInt32(App.MainWindow.AppWindow.Position.X, windowY, PageSize.Width, PageSize.Height));
-            }
         }
 
         private void UpdateMuteUi()

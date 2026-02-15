@@ -17,12 +17,10 @@
             IconSource="/Assets/TrayIcon.ico"
             />
 
-        <Frame x:Name="ContentFrame">
-            <Frame.ContentTransitions>
-                <TransitionCollection>
-                    <NavigationThemeTransition />
-                </TransitionCollection>
-            </Frame.ContentTransitions>
+        <Frame x:Name="ContentFrame" Opacity="1">
+            <Frame.RenderTransform>
+                <TranslateTransform x:Name="ContentFrameTranslateTransform" />
+            </Frame.RenderTransform>
         </Frame>
     </Grid>
 </Window>

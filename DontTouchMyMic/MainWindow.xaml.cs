@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Windows.Graphics;
 using Microsoft.UI.Xaml;
@@ -15,12 +16,15 @@ namespace DontTouchMyMic
     public sealed partial class MainWindow : Window
     {
         private const int WindowAnimationDurationMs = 120;
+        private const int NavigationContentAnimationDurationMs = 150;
+        private const double NavigationContentSlideOffsetPx = 22;
         private const int WindowOffsetFromTaskbar = 5;
 
         TaskbarAnchoredWindowVisibilityController m_visibilityController;
         WindowAcrylicBackdrop m_acrylicBackdrop;
         AboutWindow m_aboutWindow;
         TrayMenuWindow m_trayMenuWindow;
+        Storyboard m_navigationContentStoryboard;
 
         public MainWindow()
         {
@@ -46,14 +50,20 @@ namespace DontTouchMyMic
             m_acrylicBackdrop.TryEnable(useAcrylicThin: false);
         }
         
-        public void NavigateTo(Type sourcePageType)
+        public void NavigateTo(Type destinationPageType)
         {
-            ContentFrame.Navigate(sourcePageType, null, new SlideNavigationTransitionInfo {Effect = SlideNavigationTransitionEffect.FromRight});
+            NavigateCore(destinationPageType, isBackNavigation: false);
         }
         
         public void NavigateBack()
         {
-            ContentFrame.GoBack();
+            if (!ContentFrame.CanGoBack)
+            {
+                return;
+            }
+
+            var previousPageType = ContentFrame.BackStack.Last().SourcePageType;
+            NavigateCore(previousPageType, isBackNavigation: true);
         }
 
         private async void Window_Activated(object sender, WindowActivatedEventArgs args)
@@ -168,6 +178,106 @@ namespace DontTouchMyMic
         private void SetWindowDimensions(SizeInt32 windowSize)
         {
             AppWindow.MoveAndResize(TaskbarAnchoredWindowAnimation.CalculateVisibleWindowRect(windowSize, WindowOffsetFromTaskbar));
+        }
+
+        private void NavigateCore(Type destinationPageType, bool isBackNavigation)
+        {
+            ResizeWindowForPage(destinationPageType);
+
+            if (isBackNavigation)
+            {
+                ContentFrame.GoBack(new SuppressNavigationTransitionInfo());
+            }
+            else
+            {
+                ContentFrame.Navigate(destinationPageType, null, new SuppressNavigationTransitionInfo());
+            }
+
+            PlayNavigationContentAnimation(isBackNavigation);
+        }
+
+        private void ResizeWindowForPage(Type pageType)
+        {
+            if (!TryGetPageSize(pageType, out var targetSize))
+            {
+                return;
+            }
+
+            var currentPosition = AppWindow.Position;
+            var currentSize = AppWindow.Size;
+
+            if (currentSize.Width == targetSize.Width && currentSize.Height == targetSize.Height)
+            {
+                return;
+            }
+
+            var targetY = currentPosition.Y + currentSize.Height - targetSize.Height;
+            AppWindow.MoveAndResize(new RectInt32(currentPosition.X, targetY, targetSize.Width, targetSize.Height));
+        }
+
+        private static bool TryGetPageSize(Type pageType, out SizeInt32 pageSize)
+        {
+            if (pageType == typeof(MainPage))
+            {
+                pageSize = MainPage.PageSize;
+                return true;
+            }
+
+            if (pageType == typeof(SelectorPage))
+            {
+                pageSize = SelectorPage.PageSize;
+                return true;
+            }
+
+            pageSize = default;
+            return false;
+        }
+
+        private void PlayNavigationContentAnimation(bool isBackNavigation)
+        {
+            m_navigationContentStoryboard?.Stop();
+
+            var slideFromX = isBackNavigation ? -NavigationContentSlideOffsetPx : NavigationContentSlideOffsetPx;
+
+            ContentFrameTranslateTransform.X = slideFromX;
+            ContentFrame.Opacity = 0.92;
+
+            var easing = new CubicEase { EasingMode = EasingMode.EaseOut };
+
+            var slideAnimation = new DoubleAnimation
+            {
+                From = slideFromX,
+                To = 0,
+                Duration = TimeSpan.FromMilliseconds(NavigationContentAnimationDurationMs),
+                EnableDependentAnimation = true,
+                EasingFunction = easing
+            };
+
+            var fadeAnimation = new DoubleAnimation
+            {
+                From = 0.92,
+                To = 1,
+                Duration = TimeSpan.FromMilliseconds(NavigationContentAnimationDurationMs),
+                EasingFunction = easing
+            };
+
+            Storyboard.SetTarget(slideAnimation, ContentFrameTranslateTransform);
+            Storyboard.SetTargetProperty(slideAnimation, "X");
+
+            Storyboard.SetTarget(fadeAnimation, ContentFrame);
+            Storyboard.SetTargetProperty(fadeAnimation, "Opacity");
+
+            var storyboard = new Storyboard();
+            storyboard.Children.Add(slideAnimation);
+            storyboard.Children.Add(fadeAnimation);
+            storyboard.Completed += (_, _) =>
+            {
+                ContentFrameTranslateTransform.X = 0;
+                ContentFrame.Opacity = 1;
+            };
+
+            m_navigationContentStoryboard = storyboard;
+            storyboard.Begin();
         }
 
         private async Task HideWindowAnimatedAsync(bool navigateToMainPageAfterHide)

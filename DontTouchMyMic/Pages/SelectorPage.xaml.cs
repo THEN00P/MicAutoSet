@@ -4,7 +4,6 @@ using System.Linq;
 using Windows.Graphics;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Navigation;
 using DontTouchMyMic.Utils;
 
 namespace DontTouchMyMic.Pages
@@ -80,19 +79,6 @@ namespace DontTouchMyMic.Pages
             if (sender is Button button && button.Tag is Guid deviceId)
             {
                 App.RemoveCachedMicrophone(deviceId);
-            }
-        }
-
-        protected override void OnNavigatedTo(NavigationEventArgs e)
-        {
-            base.OnNavigatedTo(e);
-
-            if (App.MainWindow != null)
-            {
-                int windowY = App.MainWindow.AppWindow.Position.Y + App.MainWindow.AppWindow.Size.Height -
-                              PageSize.Height;
-                App.MainWindow.AppWindow.Resize(new SizeInt32(PageSize.Width, PageSize.Height));
-                App.MainWindow.AppWindow.Move(new PointInt32(App.MainWindow.AppWindow.Position.X, windowY));
             }
         }
 
