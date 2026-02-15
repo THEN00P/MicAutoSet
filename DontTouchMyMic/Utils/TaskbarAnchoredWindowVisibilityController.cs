@@ -52,7 +52,12 @@ namespace DontTouchMyMic.Utils
                 var hiddenRect = TaskbarAnchoredWindowAnimation.CalculateHiddenWindowRect(targetRect);
                 m_window.AppWindow.MoveAndResize(hiddenRect);
                 WindowExtensions.Show(m_window, true);
-                PositionUtil.SetForegroundWindow(hwnd);
+
+                var pinnedBelowTaskbar = PositionUtil.PlaceWindowBelowTaskbarAboveApps(hwnd);
+                if (!pinnedBelowTaskbar)
+                {
+                    PositionUtil.SetForegroundWindow(hwnd);
+                }
 
                 await TaskbarAnchoredWindowAnimation.AnimateWindowRectAsync(
                     m_window.AppWindow,
@@ -61,6 +66,8 @@ namespace DontTouchMyMic.Utils
                     m_windowAnimationDurationMs,
                     animationCts.Token
                 );
+
+                PositionUtil.SetForegroundWindow(hwnd);
             }
             catch (OperationCanceledException)
             {
