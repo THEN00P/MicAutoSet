@@ -608,9 +608,7 @@ namespace DontTouchMyMic
             MainWindow.Activate();
 
             MainWindow.Closed += M_window_Closed;
-#if !DEBUG
             WindowExtensions.Hide(MainWindow);
-#endif
         }
 
         private void M_window_Closed(object sender, WindowEventArgs args)

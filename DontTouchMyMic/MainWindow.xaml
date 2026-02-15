@@ -12,28 +12,10 @@
     <Grid>
         <tb:TaskbarIcon
             LeftClickCommand="{x:Bind OpenWindowCommand}"
-            ContextMenuMode="PopupMenu"
+            RightClickCommand="{x:Bind OpenTrayMenuCommand}"
             NoLeftClickDelay="True"
             IconSource="/Assets/TrayIcon.ico"
-            >
-            <tb:TaskbarIcon.ContextFlyout>
-                <MenuFlyout AreOpenCloseAnimationsEnabled="False">
-                    <MenuFlyoutItem
-                    Command="{x:Bind OpenWindowCommand}"
-                    Text="Show/Hide Window"
-                    />
-                    <MenuFlyoutItem
-                    Command="{x:Bind OpenAboutWindowCommand}"
-                    Text="About"
-                    />
-                    <MenuFlyoutSeparator />
-                    <MenuFlyoutItem
-                    Command="{x:Bind ExitApplicationCommand}"
-                    Text="Exit"
-                    />
-                </MenuFlyout>
-            </tb:TaskbarIcon.ContextFlyout>
-        </tb:TaskbarIcon>
+            />
 
         <Frame x:Name="ContentFrame">
             <Frame.ContentTransitions>
