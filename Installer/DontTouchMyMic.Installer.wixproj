@@ -13,9 +13,17 @@
     <AppTargetFramework>net10.0-windows10.0.26100.0</AppTargetFramework>
     <AppPublishDir>$(MSBuildProjectDirectory)\..\artifacts\publish\$(AppRuntimeIdentifier)</AppPublishDir>
     <DefineConstants>PublishDir=$(AppPublishDir);AppIcon=$(MSBuildProjectDirectory)\..\DontTouchMyMic\Assets\TrayIcon.ico;AppVersion=$(AppVersion)</DefineConstants>
+    <AppPublishProperties>Configuration=$(Configuration);Platform=$(AppPublishPlatform);PublishProfile=;TargetFramework=$(AppTargetFramework);RuntimeIdentifier=$(AppRuntimeIdentifier);WindowsPackageType=None;PublishDir=$(AppPublishDir)\;AppVersion=$(AppVersion);AppVersionPackage=$(AppVersionPackage);AppVersionAssembly=$(AppVersionAssembly)</AppPublishProperties>
     <ProjectGuid>{774d64df-1c21-b4d4-56c9-d9b0ab7c4608}</ProjectGuid>
   </PropertyGroup>
   <Target Name="PublishAppForInstaller" BeforeTargets="BeforeBuild">
-    <MSBuild Projects="$(AppProjectPath)" Targets="Publish" Properties="Configuration=$(Configuration);Platform=$(AppPublishPlatform);PublishProfile=;TargetFramework=$(AppTargetFramework);RuntimeIdentifier=$(AppRuntimeIdentifier);WindowsPackageType=None;PublishDir=$(AppPublishDir)\;AppVersion=$(AppVersion);AppVersionPackage=$(AppVersionPackage);AppVersionAssembly=$(AppVersionAssembly);BuildMachineTime=$(BuildMachineTime);BuildBranch=$(BuildBranch);BuildCommit=$(BuildCommit)" />
+    <PropertyGroup>
+      <_AppPublishPropertiesWithMetadata>$(AppPublishProperties)</_AppPublishPropertiesWithMetadata>
+      <_AppPublishPropertiesWithMetadata Condition="'$(BuildMachineTime)' != ''">$(_AppPublishPropertiesWithMetadata);BuildMachineTime=$(BuildMachineTime)</_AppPublishPropertiesWithMetadata>
+      <_AppPublishPropertiesWithMetadata Condition="'$(BuildBranch)' != ''">$(_AppPublishPropertiesWithMetadata);BuildBranch=$(BuildBranch)</_AppPublishPropertiesWithMetadata>
+      <_AppPublishPropertiesWithMetadata Condition="'$(BuildCommit)' != ''">$(_AppPublishPropertiesWithMetadata);BuildCommit=$(BuildCommit)</_AppPublishPropertiesWithMetadata>
+    </PropertyGroup>
+
+    <MSBuild Projects="$(AppProjectPath)" Targets="Publish" Properties="$(_AppPublishPropertiesWithMetadata)" />
   </Target>
 </Project>

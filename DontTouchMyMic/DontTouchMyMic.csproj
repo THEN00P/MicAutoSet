@@ -21,7 +21,7 @@
     <AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
     <GenerateTestArtifacts>True</GenerateTestArtifacts>
     <AppxBundle>Never</AppxBundle>
-    <AppInstallerUri>C:\Program Files\Dont Touch My Mic\</AppInstallerUri>
+    <AppInstallerUri>C:\Program Files\Dont touch my mic\</AppInstallerUri>
     <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
     <Version>$(AppVersion)</Version>
     <AssemblyVersion>$(AppVersionAssembly)</AssemblyVersion>
@@ -29,15 +29,6 @@
     <InformationalVersion>$(AppVersion)</InformationalVersion>
     <AppxPackageVersion>$(AppVersionPackage)</AppxPackageVersion>
     <BuildMachineTime Condition="'$(BuildMachineTime)' == ''">$([System.DateTimeOffset]::Now.ToString(&quot;yyyy-MM-dd HH:mm:ss zzz&quot;))</BuildMachineTime>
-    <BuildBranch Condition="'$(BuildBranch)' == '' and '$(GITHUB_REF_NAME)' != ''">$(GITHUB_REF_NAME)</BuildBranch>
-    <BuildBranch Condition="'$(BuildBranch)' == '' and '$(BUILD_SOURCEBRANCHNAME)' != ''">$(BUILD_SOURCEBRANCHNAME)</BuildBranch>
-    <BuildBranch Condition="'$(BuildBranch)' == '' and '$(RepositoryBranch)' != ''">$(RepositoryBranch)</BuildBranch>
-    <BuildBranch Condition="'$(BuildBranch)' == '' and '$(GIT_BRANCH)' != ''">$(GIT_BRANCH)</BuildBranch>
-    <BuildBranch Condition="'$(BuildBranch)' == ''">unknown</BuildBranch>
-    <BuildCommit Condition="'$(BuildCommit)' == '' and '$(GITHUB_SHA)' != ''">$(GITHUB_SHA)</BuildCommit>
-    <BuildCommit Condition="'$(BuildCommit)' == '' and '$(BUILD_SOURCEVERSION)' != ''">$(BUILD_SOURCEVERSION)</BuildCommit>
-    <BuildCommit Condition="'$(BuildCommit)' == '' and '$(SourceRevisionId)' != ''">$(SourceRevisionId)</BuildCommit>
-    <BuildCommit Condition="'$(BuildCommit)' == ''">unknown</BuildCommit>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Pages\MainPage.xaml" />
@@ -62,19 +53,36 @@
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260101001" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.7463" />
     <Manifest Include="$(ApplicationManifest)" />
-    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
-      <_Parameter1>BuildMachineTime</_Parameter1>
-      <_Parameter2>$(BuildMachineTime)</_Parameter2>
-    </AssemblyAttribute>
-    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
-      <_Parameter1>BuildBranch</_Parameter1>
-      <_Parameter2>$(BuildBranch)</_Parameter2>
-    </AssemblyAttribute>
-    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
-      <_Parameter1>BuildCommit</_Parameter1>
-      <_Parameter2>$(BuildCommit)</_Parameter2>
-    </AssemblyAttribute>
   </ItemGroup>
+
+  <Target Name="ResolveBuildMetadata" BeforeTargets="GetAssemblyAttributes" Condition="'$(DesignTimeBuild)' != 'true'">
+    <PropertyGroup>
+      <_BuildMetadataRepoRoot>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\..'))</_BuildMetadataRepoRoot>
+    </PropertyGroup>
+
+    <Exec Condition="'$(BuildBranch)' == '' or '$(BuildBranch)' == 'unknown'" Command="git -C &quot;$(_BuildMetadataRepoRoot)&quot; rev-parse --abbrev-ref HEAD" ConsoleToMSBuild="true" IgnoreExitCode="true" StandardOutputImportance="Low">
+      <Output TaskParameter="ConsoleOutput" ItemName="_GitBranchOutput" />
+    </Exec>
+    <PropertyGroup>
+      <BuildBranch Condition="('$(BuildBranch)' == '' or '$(BuildBranch)' == 'unknown') and '@(_GitBranchOutput)' != ''">@(_GitBranchOutput->'%(Identity)')</BuildBranch>
+      <BuildBranch Condition="'$(BuildBranch)' == 'HEAD'"></BuildBranch>
+      <BuildBranch Condition="'$(BuildBranch)' == ''">unknown</BuildBranch>
+    </PropertyGroup>
+
+    <Exec Condition="'$(BuildCommit)' == '' or '$(BuildCommit)' == 'unknown'" Command="git -C &quot;$(_BuildMetadataRepoRoot)&quot; rev-parse HEAD" ConsoleToMSBuild="true" IgnoreExitCode="true" StandardOutputImportance="Low">
+      <Output TaskParameter="ConsoleOutput" ItemName="_GitCommitOutput" />
+    </Exec>
+    <PropertyGroup>
+      <BuildCommit Condition="('$(BuildCommit)' == '' or '$(BuildCommit)' == 'unknown') and '@(_GitCommitOutput)' != ''">@(_GitCommitOutput->'%(Identity)')</BuildCommit>
+      <BuildCommit Condition="'$(BuildCommit)' == ''">unknown</BuildCommit>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <AssemblyMetadata Include="BuildMachineTime" Value="$(BuildMachineTime)" />
+      <AssemblyMetadata Include="BuildBranch" Value="$(BuildBranch)" />
+      <AssemblyMetadata Include="BuildCommit" Value="$(BuildCommit)" />
+    </ItemGroup>
+  </Target>
 
   <Target
     Name="SyncPackageManifestVersion"

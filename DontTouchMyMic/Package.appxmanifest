@@ -16,7 +16,7 @@
   <mp:PhoneIdentity PhoneProductId="c6f066d8-9065-41fb-bce5-f16d0e89f43f" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
-    <DisplayName>Don't touch my mic!</DisplayName>
+    <DisplayName>Dont touch my mic</DisplayName>
     <PublisherDisplayName>THEN00P</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
@@ -35,7 +35,7 @@
       Executable="$targetnametoken$.exe"
       EntryPoint="$targetentrypoint$">
       <uap:VisualElements
-        DisplayName="Don't touch my mic!"
+        DisplayName="Dont touch my mic"
         Description="Keep your microphone settings"
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
@@ -48,7 +48,7 @@
           <uap5:StartupTask
             TaskId="DontTouchMyMic"
             Enabled="true"
-            DisplayName="Don't Touch my Mic!"/>
+            DisplayName="Dont touch my mic"/>
         </uap5:Extension>
       </Extensions>
     </Application>

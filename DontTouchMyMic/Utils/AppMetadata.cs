@@ -10,7 +10,7 @@ namespace DontTouchMyMic.Utils
 {
     internal static class AppMetadata
     {
-        private const string AppDisplayName = "Dont Touch My Mic";
+        private const string AppDisplayName = "Dont touch my mic";
 
         internal static string GetInstalledVersion()
         {

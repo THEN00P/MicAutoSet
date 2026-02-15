@@ -1,12 +1,12 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <Package
-    Name="Dont Touch My Mic"
+    Name="Dont touch my mic"
     Manufacturer="THEN00P"
     Version="$(var.AppVersion)"
     UpgradeCode="{5A5C74A1-3A2D-4DAA-8400-3D57D44C2713}"
     Language="1033">
 
-    <MajorUpgrade DowngradeErrorMessage="A newer version of Dont Touch My Mic is already installed." />
+    <MajorUpgrade DowngradeErrorMessage="A newer version of Dont touch my mic is already installed." />
     <MediaTemplate EmbedCab="yes" />
 
     <Icon Id="AppIcon" SourceFile="$(var.AppIcon)" />
@@ -14,14 +14,14 @@
     <Property Id="ARPNOREPAIR" Value="1" />
 
     <StandardDirectory Id="ProgramFiles64Folder">
-      <Directory Id="INSTALLFOLDER" Name="Dont Touch My Mic" />
+      <Directory Id="INSTALLFOLDER" Name="Dont touch my mic" />
     </StandardDirectory>
 
     <StandardDirectory Id="ProgramMenuFolder">
-      <Directory Id="ProgramMenuDir" Name="Dont Touch My Mic" />
+      <Directory Id="ProgramMenuDir" Name="Dont touch my mic" />
     </StandardDirectory>
 
-    <Feature Id="MainFeature" Title="Dont Touch My Mic" Level="1">
+    <Feature Id="MainFeature" Title="Dont touch my mic" Level="1">
       <ComponentGroupRef Id="AppFiles" />
       <ComponentRef Id="StartMenuShortcutComponent" />
     </Feature>
@@ -39,7 +39,7 @@
     <Component Id="StartMenuShortcutComponent" Directory="ProgramMenuDir" Guid="*">
       <Shortcut
         Id="StartMenuShortcut"
-        Name="Dont Touch My Mic"
+        Name="Dont touch my mic"
         Target="[INSTALLFOLDER]DontTouchMyMic.exe"
         WorkingDirectory="INSTALLFOLDER"
         Icon="AppIcon" />
