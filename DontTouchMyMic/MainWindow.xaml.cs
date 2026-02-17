@@ -23,7 +23,6 @@ namespace DontTouchMyMic
         private const int WindowOffsetFromTaskbar = 5;
         private const string TrayIconWhiteUri = "ms-appx:///Assets/TrayIcon.White.ico";
         private const string TrayIconBlackUri = "ms-appx:///Assets/TrayIcon.Black.ico";
-        private static readonly bool IsPackagedApp = DetectPackagedApp();
 
         TaskbarAnchoredWindowVisibilityController m_visibilityController;
         WindowAcrylicBackdrop m_acrylicBackdrop;
@@ -319,38 +318,17 @@ namespace DontTouchMyMic
                 return;
             }
 
-            string iconUri;
 
-            if (IsPackagedApp)
+            var isDarkTheme = ContentFrame.ActualTheme switch
             {
-                iconUri = TrayIconWhiteUri;
-            }
-            else
-            {
-                var isDarkTheme = ContentFrame.ActualTheme switch
-                {
-                    ElementTheme.Dark => true,
-                    ElementTheme.Light => false,
-                    _ => Application.Current?.RequestedTheme == ApplicationTheme.Dark
-                };
+                ElementTheme.Dark => true,
+                ElementTheme.Light => false,
+                _ => Application.Current?.RequestedTheme == ApplicationTheme.Dark
+            };
 
-                iconUri = isDarkTheme ? TrayIconWhiteUri : TrayIconBlackUri;
-            }
+            string iconUri = isDarkTheme ? TrayIconWhiteUri : TrayIconBlackUri;
 
             AppTaskbarIcon.IconSource = new BitmapImage(new Uri(iconUri));
-        }
-
-        private static bool DetectPackagedApp()
-        {
-            try
-            {
-                _ = Package.Current;
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
         }
     }
 }
