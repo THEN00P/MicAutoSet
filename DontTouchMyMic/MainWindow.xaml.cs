@@ -2,11 +2,13 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.Graphics;
+using Windows.ApplicationModel;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Windowing;
 using CommunityToolkit.Mvvm.Input;
 using H.NotifyIcon;
 using Microsoft.UI.Xaml.Media.Animation;
+using Microsoft.UI.Xaml.Media.Imaging;
 using DontTouchMyMic.Utils;
 using DontTouchMyMic.Pages;
 
@@ -19,6 +21,9 @@ namespace DontTouchMyMic
         private const int NavigationContentAnimationDurationMs = 150;
         private const double NavigationContentSlideOffsetPx = 22;
         private const int WindowOffsetFromTaskbar = 5;
+        private const string TrayIconWhiteUri = "ms-appx:///Assets/TrayIcon.White.ico";
+        private const string TrayIconBlackUri = "ms-appx:///Assets/TrayIcon.Black.ico";
+        private static readonly bool IsPackagedApp = DetectPackagedApp();
 
         TaskbarAnchoredWindowVisibilityController m_visibilityController;
         WindowAcrylicBackdrop m_acrylicBackdrop;
@@ -30,6 +35,7 @@ namespace DontTouchMyMic
         {
             InitializeComponent();
             Closed += Window_Closed;
+            ContentFrame.ActualThemeChanged += ContentFrame_ActualThemeChanged;
 
             var presenter = AppWindow.Presenter as OverlappedPresenter;
 
@@ -44,6 +50,7 @@ namespace DontTouchMyMic
 
             SetWindowDimensions(MainPage.PageSize);
             ContentFrame.Navigate(typeof(MainPage));
+            UpdateTrayIconForTheme();
 
             m_visibilityController = new TaskbarAnchoredWindowVisibilityController(this, WindowOffsetFromTaskbar, WindowAnimationDurationMs);
             m_acrylicBackdrop = new WindowAcrylicBackdrop(this);
@@ -134,6 +141,8 @@ namespace DontTouchMyMic
 
         private void Window_Closed(object sender, WindowEventArgs args)
         {
+            ContentFrame.ActualThemeChanged -= ContentFrame_ActualThemeChanged;
+
             if (m_aboutWindow != null)
             {
                 m_aboutWindow.Closed -= AboutWindow_Closed;
@@ -153,6 +162,11 @@ namespace DontTouchMyMic
 
             m_acrylicBackdrop?.Dispose();
             m_acrylicBackdrop = null;
+        }
+
+        private void ContentFrame_ActualThemeChanged(FrameworkElement sender, object args)
+        {
+            UpdateTrayIconForTheme();
         }
 
         private void AboutWindow_Closed(object sender, WindowEventArgs args)
@@ -295,6 +309,47 @@ namespace DontTouchMyMic
             if (wasHidden && navigateToMainPageAfterHide)
             {
                 ContentFrame.Navigate(typeof(MainPage));
+            }
+        }
+
+        private void UpdateTrayIconForTheme()
+        {
+            if (AppTaskbarIcon == null)
+            {
+                return;
+            }
+
+            string iconUri;
+
+            if (IsPackagedApp)
+            {
+                iconUri = TrayIconWhiteUri;
+            }
+            else
+            {
+                var isDarkTheme = ContentFrame.ActualTheme switch
+                {
+                    ElementTheme.Dark => true,
+                    ElementTheme.Light => false,
+                    _ => Application.Current?.RequestedTheme == ApplicationTheme.Dark
+                };
+
+                iconUri = isDarkTheme ? TrayIconWhiteUri : TrayIconBlackUri;
+            }
+
+            AppTaskbarIcon.IconSource = new BitmapImage(new Uri(iconUri));
+        }
+
+        private static bool DetectPackagedApp()
+        {
+            try
+            {
+                _ = Package.Current;
+                return true;
+            }
+            catch
+            {
+                return false;
             }
         }
     }

@@ -10,11 +10,11 @@
     xmlns:tb="using:H.NotifyIcon"
     Activated="Window_Activated">
     <Grid>
-        <tb:TaskbarIcon
+        <tb:TaskbarIcon x:Name="AppTaskbarIcon"
             LeftClickCommand="{x:Bind OpenWindowCommand}"
             RightClickCommand="{x:Bind OpenTrayMenuCommand}"
             NoLeftClickDelay="True"
-            IconSource="/Assets/TrayIcon.ico"
+            IconSource="/Assets/TrayIcon.White.ico"
             />
 
         <Frame x:Name="ContentFrame" Opacity="1">
