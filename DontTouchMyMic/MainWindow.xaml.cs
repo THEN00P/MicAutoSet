@@ -190,7 +190,9 @@ namespace DontTouchMyMic
 
         private void SetWindowDimensions(SizeInt32 windowSize)
         {
-            AppWindow.MoveAndResize(TaskbarAnchoredWindowAnimation.CalculateVisibleWindowRect(windowSize, WindowOffsetFromTaskbar));
+            var scaledWindowSize = WindowScaleHelper.ScaleSizeForWindow(this, windowSize);
+            var scaledOffset = WindowScaleHelper.ScaleLengthForWindow(this, WindowOffsetFromTaskbar);
+            AppWindow.MoveAndResize(TaskbarAnchoredWindowAnimation.CalculateVisibleWindowRect(scaledWindowSize, scaledOffset));
         }
 
         private void NavigateCore(Type destinationPageType, bool isBackNavigation)
@@ -211,11 +213,12 @@ namespace DontTouchMyMic
 
         private void ResizeWindowForPage(Type pageType)
         {
-            if (!TryGetPageSize(pageType, out var targetSize))
+            if (!TryGetPageSize(pageType, out var targetLogicalSize))
             {
                 return;
             }
 
+            var targetSize = WindowScaleHelper.ScaleSizeForWindow(this, targetLogicalSize);
             var currentPosition = AppWindow.Position;
             var currentSize = AppWindow.Size;
 

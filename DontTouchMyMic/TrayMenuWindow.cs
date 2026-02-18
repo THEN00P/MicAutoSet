@@ -47,7 +47,7 @@ namespace DontTouchMyMic
                 presenter.SetBorderAndTitleBar(true, false);
             }
 
-            AppWindow.Resize(TrayMenuSize);
+            AppWindow.Resize(WindowScaleHelper.ScaleSizeForWindow(this, TrayMenuSize));
             WindowExtensions.HideInTaskbar(this);
 
             m_visibilityController = new TaskbarAnchoredWindowVisibilityController(this, WindowOffsetFromTaskbar, WindowAnimationDurationMs);

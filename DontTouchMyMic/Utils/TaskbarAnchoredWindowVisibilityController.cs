@@ -34,7 +34,9 @@ namespace DontTouchMyMic.Utils
         public async Task ShowAsync(SizeInt32 windowSize)
         {
             var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(m_window);
-            var targetRect = TaskbarAnchoredWindowAnimation.CalculateVisibleWindowRect(windowSize, m_windowOffsetFromTaskbar);
+            var scaledWindowSize = WindowScaleHelper.ScaleSizeForWindow(m_window, windowSize);
+            var scaledWindowOffsetFromTaskbar = WindowScaleHelper.ScaleLengthForWindow(m_window, m_windowOffsetFromTaskbar);
+            var targetRect = TaskbarAnchoredWindowAnimation.CalculateVisibleWindowRect(scaledWindowSize, scaledWindowOffsetFromTaskbar);
 
             if (PositionUtil.IsWindowVisible(hwnd))
             {
