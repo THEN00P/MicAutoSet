@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using AudioSwitcher.AudioApi.Observables;
 using DontTouchMyMic.Models;
+using DontTouchMyMic.Utils;
 using H.NotifyIcon;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -45,6 +46,9 @@ namespace DontTouchMyMic
         internal static MainWindow MainWindow;
         internal static event Action CachedMicrophonesChanged;
         internal static event Action AudioStateChanged;
+
+        private OnboardingWindow m_onboardingWindow;
+        private bool m_isShuttingDown;
 
         public App()
         {
@@ -609,14 +613,71 @@ namespace DontTouchMyMic
 
             MainWindow.Closed += M_window_Closed;
             WindowExtensions.Hide(MainWindow);
+
+            if (OnboardingStateManager.ShouldShowOnLaunch())
+            {
+                OnboardingStateManager.MarkShown();
+                OpenOnboardingWindow();
+            }
+        }
+
+        internal void OpenOnboardingWindow()
+        {
+            if (m_onboardingWindow == null)
+            {
+                m_onboardingWindow = new OnboardingWindow();
+                m_onboardingWindow.Closed += OnboardingWindow_Closed;
+            }
+
+            m_onboardingWindow.CenterOnScreen();
+            WindowExtensions.Show(m_onboardingWindow, true);
+            m_onboardingWindow.Activate();
+        }
+
+        internal void PrepareForShutdown()
+        {
+            m_isShuttingDown = true;
+
+            if (m_onboardingWindow == null)
+            {
+                return;
+            }
+
+            m_onboardingWindow.Closed -= OnboardingWindow_Closed;
+            m_onboardingWindow.CloseForAppShutdown();
+            m_onboardingWindow = null;
         }
 
         private void M_window_Closed(object sender, WindowEventArgs args)
         {
+            m_isShuttingDown = true;
+
             audioDeviceChangedSubscription?.Dispose();
             micVolumeSubscription?.Dispose();
             micMuteSubscription?.Dispose();
             Exit();
+        }
+
+        private void OnboardingWindow_Closed(object sender, WindowEventArgs args)
+        {
+            if (sender is OnboardingWindow onboardingWindow)
+            {
+                onboardingWindow.Closed -= OnboardingWindow_Closed;
+            }
+
+            m_onboardingWindow = null;
+
+            if (m_isShuttingDown)
+            {
+                return;
+            }
+
+            // Keep the background app process alive when onboarding is closed via titlebar/taskbar close.
+            if (MainWindow != null)
+            {
+                MainWindow.Activate();
+                WindowExtensions.Hide(MainWindow);
+            }
         }
     }
 }

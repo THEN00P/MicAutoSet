@@ -24,6 +24,7 @@
     <Feature Id="MainFeature" Title="Dont touch my mic" Level="1">
       <ComponentGroupRef Id="AppFiles" />
       <ComponentRef Id="StartMenuShortcutComponent" />
+      <ComponentRef Id="OnboardingMarkerComponent" />
     </Feature>
   </Package>
 
@@ -48,6 +49,22 @@
         Root="HKCU"
         Key="Software\THEN00P\DontTouchMyMic"
         Name="HasStartMenuShortcut"
+        Type="integer"
+        Value="1"
+        KeyPath="yes" />
+    </Component>
+  </Fragment>
+
+  <Fragment>
+    <Component
+      Id="OnboardingMarkerComponent"
+      Directory="INSTALLFOLDER"
+      Guid="*"
+      Condition="NOT Installed AND NOT WIX_UPGRADE_DETECTED">
+      <RegistryValue
+        Root="HKCU"
+        Key="Software\THEN00P\DontTouchMyMic"
+        Name="ShowOnboarding"
         Type="integer"
         Value="1"
         KeyPath="yes" />

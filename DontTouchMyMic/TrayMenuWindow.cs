@@ -18,7 +18,11 @@ namespace DontTouchMyMic
     {
         private const int WindowAnimationDurationMs = 120;
         private const int WindowOffsetFromTaskbar = 5;
+#if DEBUG
+        private static readonly SizeInt32 TrayMenuSize = new(228, 140);
+#else
         private static readonly SizeInt32 TrayMenuSize = new(228, 110);
+#endif
 
         private readonly MainWindow m_mainWindow;
         private readonly Brush m_normalBrush;
@@ -83,6 +87,9 @@ namespace DontTouchMyMic
             var stack = new StackPanel { Spacing = 0 };
             stack.Children.Add(CreateMenuButton("Show/Hide Window", "\uE8A0", ShowHideWindow_Click));
             stack.Children.Add(CreateMenuButton("About", "\uE946", OpenAboutWindow_Click));
+#if DEBUG
+            stack.Children.Add(CreateMenuButton("Open onboarding", "\uE946", OpenOnboardingWindow_Click));
+#endif
             stack.Children.Add(new Rectangle
             {
                 Margin = new Thickness(0, 2, 0, 2),
@@ -215,6 +222,14 @@ namespace DontTouchMyMic
             await HideWindowAnimatedAsync();
             m_mainWindow.OpenAboutWindow();
         }
+
+#if DEBUG
+        private async void OpenOnboardingWindow_Click(object sender, RoutedEventArgs e)
+        {
+            await HideWindowAnimatedAsync();
+            m_mainWindow.OpenOnboardingWindow();
+        }
+#endif
 
         private async void ExitApplication_Click(object sender, RoutedEventArgs e)
         {

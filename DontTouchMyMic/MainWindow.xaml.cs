@@ -29,6 +29,7 @@ namespace DontTouchMyMic
         AboutWindow m_aboutWindow;
         TrayMenuWindow m_trayMenuWindow;
         Storyboard m_navigationContentStoryboard;
+        bool m_isExitRequested;
 
         public MainWindow()
         {
@@ -54,6 +55,7 @@ namespace DontTouchMyMic
             m_visibilityController = new TaskbarAnchoredWindowVisibilityController(this, WindowOffsetFromTaskbar, WindowAnimationDurationMs);
             m_acrylicBackdrop = new WindowAcrylicBackdrop(this);
             m_acrylicBackdrop.TryEnable(useAcrylicThin: false);
+            AppWindow.Closing += AppWindow_Closing;
         }
         
         public void NavigateTo(Type destinationPageType)
@@ -106,6 +108,14 @@ namespace DontTouchMyMic
             m_aboutWindow.Activate();
         }
 
+        public void OpenOnboardingWindow()
+        {
+            if (Application.Current is App app)
+            {
+                app.OpenOnboardingWindow();
+            }
+        }
+
         private TrayMenuWindow EnsureTrayMenuWindow()
         {
             if (m_trayMenuWindow != null)
@@ -128,6 +138,13 @@ namespace DontTouchMyMic
         [RelayCommand]
         public void ExitApplication()
         {
+            m_isExitRequested = true;
+
+            if (Application.Current is App app)
+            {
+                app.PrepareForShutdown();
+            }
+
             if (m_trayMenuWindow != null)
             {
                 m_trayMenuWindow.Closed -= TrayMenuWindow_Closed;
@@ -141,6 +158,7 @@ namespace DontTouchMyMic
         private void Window_Closed(object sender, WindowEventArgs args)
         {
             ContentFrame.ActualThemeChanged -= ContentFrame_ActualThemeChanged;
+            AppWindow.Closing -= AppWindow_Closing;
 
             if (m_aboutWindow != null)
             {
@@ -161,6 +179,17 @@ namespace DontTouchMyMic
 
             m_acrylicBackdrop?.Dispose();
             m_acrylicBackdrop = null;
+        }
+
+        private void AppWindow_Closing(AppWindow sender, AppWindowClosingEventArgs args)
+        {
+            if (m_isExitRequested)
+            {
+                return;
+            }
+
+            args.Cancel = true;
+            WindowExtensions.Hide(this, true);
         }
 
         private void ContentFrame_ActualThemeChanged(FrameworkElement sender, object args)
