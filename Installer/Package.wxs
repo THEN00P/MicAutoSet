@@ -23,17 +23,39 @@
 
     <Feature Id="MainFeature" Title="Dont touch my mic" Level="1">
       <ComponentGroupRef Id="AppFiles" />
+      <ComponentRef Id="MainExecutableComponent" />
       <ComponentRef Id="StartMenuShortcutComponent" />
       <ComponentRef Id="OnboardingMarkerComponent" />
     </Feature>
+
+    <CustomAction
+      Id="LaunchInstalledApplication"
+      FileRef="DontTouchMyMicExecutable"
+      ExeCommand=""
+      Return="asyncNoWait"
+      Impersonate="yes" />
+
+    <InstallExecuteSequence>
+      <Custom
+        Action="LaunchInstalledApplication"
+        After="InstallFinalize"
+        Condition="NOT Installed AND NOT REMOVE" />
+    </InstallExecuteSequence>
   </Package>
 
   <Fragment>
     <ComponentGroup Id="AppFiles" Directory="INSTALLFOLDER">
       <Files Include="$(var.PublishDir)\**">
         <Exclude Files="$(var.PublishDir)\**\*.pdb" />
+        <Exclude Files="$(var.PublishDir)\DontTouchMyMic.exe" />
       </Files>
     </ComponentGroup>
+  </Fragment>
+
+  <Fragment>
+    <Component Id="MainExecutableComponent" Directory="INSTALLFOLDER" Guid="*">
+      <File Id="DontTouchMyMicExecutable" Source="$(var.PublishDir)\DontTouchMyMic.exe" KeyPath="yes" />
+    </Component>
   </Fragment>
 
   <Fragment>

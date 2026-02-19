@@ -48,6 +48,7 @@ namespace DontTouchMyMic
                 presenter.IsResizable = false;
                 presenter.IsMaximizable = false;
                 presenter.IsMinimizable = false;
+                presenter.IsAlwaysOnTop = true;
             }
 
             GetOrCreateMediaPlayer().IsLoopingEnabled = true;

@@ -21,6 +21,7 @@ namespace DontTouchMyMic
         private const int NavigationContentAnimationDurationMs = 150;
         private const double NavigationContentSlideOffsetPx = 22;
         private const int WindowOffsetFromTaskbar = 5;
+        private const int TrayLeftClickReopenSuppressionMs = 100;
         private const string TrayIconWhiteUri = "ms-appx:///Assets/TrayIcon.White.ico";
         private const string TrayIconBlackUri = "ms-appx:///Assets/TrayIcon.Black.ico";
 
@@ -30,6 +31,7 @@ namespace DontTouchMyMic
         TrayMenuWindow m_trayMenuWindow;
         Storyboard m_navigationContentStoryboard;
         bool m_isExitRequested;
+        DateTimeOffset m_lastDeactivationHideAt = DateTimeOffset.MinValue;
 
         public MainWindow()
         {
@@ -78,14 +80,36 @@ namespace DontTouchMyMic
         {
             if (args.WindowActivationState == WindowActivationState.Deactivated)
             {
+                if (m_visibilityController.IsVisible)
+                {
+                    m_lastDeactivationHideAt = DateTimeOffset.UtcNow;
+                }
+
                 await HideWindowAnimatedAsync(navigateToMainPageAfterHide: true);
             }
         }
-        
+
         [RelayCommand]
         public Task OpenWindow()
         {
             return OpenWindowAnimatedAsync();
+        }
+
+        [RelayCommand]
+        public async Task ToggleWindowFromTray()
+        {
+            if (m_visibilityController.IsVisible)
+            {
+                await HideWindowAnimatedAsync(navigateToMainPageAfterHide: true);
+                return;
+            }
+
+            if ((DateTimeOffset.UtcNow - m_lastDeactivationHideAt).TotalMilliseconds <= TrayLeftClickReopenSuppressionMs)
+            {
+                return;
+            }
+
+            await OpenWindowAnimatedAsync();
         }
 
         [RelayCommand]

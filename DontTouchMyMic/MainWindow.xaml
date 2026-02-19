@@ -11,7 +11,7 @@
     Activated="Window_Activated">
     <Grid>
         <tb:TaskbarIcon x:Name="AppTaskbarIcon"
-            LeftClickCommand="{x:Bind OpenWindowCommand}"
+            LeftClickCommand="{x:Bind ToggleWindowFromTrayCommand}"
             RightClickCommand="{x:Bind OpenTrayMenuCommand}"
             NoLeftClickDelay="True"
             IconSource="/Assets/TrayIcon.White.ico"
