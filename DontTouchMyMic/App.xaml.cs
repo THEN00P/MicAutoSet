@@ -297,27 +297,29 @@ namespace DontTouchMyMic
 
                 if (existing == null)
                 {
-                    CachedMicrophones.Add(new CachedMicrophoneEntry
+                    existing = FindCachedEntryForDeviceMigrationNoLock(device);
+                }
+
+                if (existing == null)
+                {
+                    CachedMicrophones.Add(CreateCachedEntry(device));
+                    changed = true;
+                }
+                else
+                {
+                    changed = UpdateCachedIdentityNoLock(existing, device);
+
+                    if (!string.Equals(existing.Name, device.FullName, StringComparison.Ordinal))
                     {
-                        DeviceId = device.Id,
-                        Name = device.FullName,
-                        Volume = NormalizeVolume(device.Volume)
-                    });
+                        existing.Name = device.FullName;
+                        changed = true;
+                    }
 
-                    SaveCachedMicrophonesNoLock();
-                    return true;
-                }
-
-                if (!string.Equals(existing.Name, device.FullName, StringComparison.Ordinal))
-                {
-                    existing.Name = device.FullName;
-                    changed = true;
-                }
-
-                if (updateVolume && device.Volume >= 0 && Math.Abs(existing.Volume - device.Volume) > 0.1)
-                {
-                    existing.Volume = NormalizeVolume(device.Volume);
-                    changed = true;
+                    if (updateVolume && device.Volume >= 0 && Math.Abs(existing.Volume - device.Volume) > 0.1)
+                    {
+                        existing.Volume = NormalizeVolume(device.Volume);
+                        changed = true;
+                    }
                 }
 
                 if (changed)
@@ -327,6 +329,100 @@ namespace DontTouchMyMic
             }
 
             return changed;
+        }
+
+        private static CachedMicrophoneEntry CreateCachedEntry(CoreAudioDevice device)
+        {
+            return new CachedMicrophoneEntry
+            {
+                DeviceId = device.Id,
+                EndpointGuid = device.EndpointGuid,
+                RealId = device.RealId ?? string.Empty,
+                InterfaceName = NormalizeDeviceText(device.InterfaceName),
+                Name = device.FullName,
+                Volume = NormalizeVolume(device.Volume)
+            };
+        }
+
+        private static CachedMicrophoneEntry FindCachedEntryForDeviceMigrationNoLock(CoreAudioDevice device)
+        {
+            var endpointGuid = device.EndpointGuid;
+
+            if (endpointGuid.HasValue)
+            {
+                var endpointMatch = CachedMicrophones
+                    .Where(entry => entry.EndpointGuid == endpointGuid.Value)
+                    .ToList();
+
+                if (endpointMatch.Count == 1)
+                    return endpointMatch[0];
+            }
+
+            var fullName = NormalizeDeviceText(device.FullName);
+            if (string.IsNullOrWhiteSpace(fullName))
+                return null;
+
+            var interfaceName = NormalizeDeviceText(device.InterfaceName);
+            var candidates = CachedMicrophones
+                .Where(entry =>
+                    entry.DeviceId != device.Id &&
+                    !ConnectedCaptureDevices.ContainsKey(entry.DeviceId) &&
+                    string.Equals(NormalizeDeviceText(entry.Name), fullName, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            if (!string.IsNullOrWhiteSpace(interfaceName))
+            {
+                var interfaceMatches = candidates
+                    .Where(entry => string.Equals(
+                        NormalizeDeviceText(entry.InterfaceName),
+                        interfaceName,
+                        StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+
+                if (interfaceMatches.Count == 1)
+                    return interfaceMatches[0];
+            }
+
+            return candidates.Count == 1 ? candidates[0] : null;
+        }
+
+        private static bool UpdateCachedIdentityNoLock(CachedMicrophoneEntry entry, CoreAudioDevice device)
+        {
+            var changed = false;
+            var endpointGuid = device.EndpointGuid;
+            var realId = device.RealId ?? string.Empty;
+            var interfaceName = NormalizeDeviceText(device.InterfaceName);
+
+            if (entry.DeviceId != device.Id)
+            {
+                entry.DeviceId = device.Id;
+                changed = true;
+            }
+
+            if (endpointGuid.HasValue && entry.EndpointGuid != endpointGuid)
+            {
+                entry.EndpointGuid = endpointGuid;
+                changed = true;
+            }
+
+            if (!string.Equals(entry.RealId, realId, StringComparison.Ordinal))
+            {
+                entry.RealId = realId;
+                changed = true;
+            }
+
+            if (!string.Equals(entry.InterfaceName, interfaceName, StringComparison.Ordinal))
+            {
+                entry.InterfaceName = interfaceName;
+                changed = true;
+            }
+
+            return changed;
+        }
+
+        private static string NormalizeDeviceText(string value)
+        {
+            return string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
         }
 
         private static bool UpdateCachedName(Guid deviceId, string name)
@@ -376,12 +472,7 @@ namespace DontTouchMyMic
                     ConnectedCaptureDevices.TryGetValue(windowsDefaultCaptureId.Value, out var windowsDefaultCaptureDevice) &&
                     CachedMicrophones.All(entry => entry.DeviceId != windowsDefaultCaptureDevice.Id))
                 {
-                    CachedMicrophones.Add(new CachedMicrophoneEntry
-                    {
-                        DeviceId = windowsDefaultCaptureDevice.Id,
-                        Name = windowsDefaultCaptureDevice.FullName,
-                        Volume = NormalizeVolume(windowsDefaultCaptureDevice.Volume)
-                    });
+                    CachedMicrophones.Add(CreateCachedEntry(windowsDefaultCaptureDevice));
                     cacheChanged = true;
                 }
 
@@ -394,12 +485,18 @@ namespace DontTouchMyMic
 
                         if (CachedMicrophones.All(entry => entry.DeviceId != captureDevice.Id))
                         {
-                            CachedMicrophones.Add(new CachedMicrophoneEntry
+                            var migratedEntry = FindCachedEntryForDeviceMigrationNoLock(captureDevice);
+
+                            if (migratedEntry != null)
                             {
-                                DeviceId = captureDevice.Id,
-                                Name = captureDevice.FullName,
-                                Volume = NormalizeVolume(captureDevice.Volume)
-                            });
+                                UpdateCachedIdentityNoLock(migratedEntry, captureDevice);
+                                migratedEntry.Name = captureDevice.FullName;
+                            }
+                            else
+                            {
+                                CachedMicrophones.Add(CreateCachedEntry(captureDevice));
+                            }
+
                             cacheChanged = true;
                         }
                     }
@@ -570,6 +667,8 @@ namespace DontTouchMyMic
                             continue;
 
                         entry.Name = string.IsNullOrWhiteSpace(entry.Name) ? "Unknown microphone" : entry.Name;
+                        entry.RealId = entry.RealId ?? string.Empty;
+                        entry.InterfaceName = NormalizeDeviceText(entry.InterfaceName);
                         entry.Volume = NormalizeVolume(entry.Volume);
 
                         CachedMicrophones.Add(entry);
